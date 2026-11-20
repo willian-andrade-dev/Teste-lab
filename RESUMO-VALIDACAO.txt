@@ -1,4 +1,4 @@
-Versão 0.13
-179 testes locais: 18 acesso, 33 chegada, 41 operação, 14 sessão, 36 navegação/UI, 23 gravação/migração, 10 fila, 4 medições.
-Google Sheets/Drive, DOM e armazenamento simulados. Sem acesso a planilhas/Drive reais ou teste visual no tablet.
-Cobertura nova: abas auxiliares BR/CO formatadas sem alterar valores/Controle_BR, Drive separado por país, leitura autorizada, URLs diretos, reenvio sem cópia, migração em lotes e campos extras na saída descarregada.
+Versão 0.13.1
+181 testes locais: 18 acesso, 33 chegada, 41 operação, 14 sessão, 36 navegação/UI, 25 gravação/migração/links, 10 fila, 4 medições.
+Serviços Google/Drive, DOM e armazenamento simulados. Sem acesso às planilhas reais.
+Reparo de marcador para URL/hyperlink sem alterar outras colunas; conversão de imagem legada, preservação do link em reconstrução e imagem ainda acessível.

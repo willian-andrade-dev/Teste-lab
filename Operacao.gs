@@ -156,18 +156,17 @@ function checklistTexto_(chk){if(!chk)return '';const labels={mecanica:'Condiç�
 /** Índice em memória: evita percorrer o histórico inteiro para cada viagem. */
 function indiceEventos_(eventos){const index=Object.create(null);eventos.forEach(e=>(index[e[3]]||(index[e[3]]=[])).push(e));return index;}
 function temFotoLacre_(ss,id){const sh=ss.getSheetByName('Fotos_v3'),count=sh.getLastRow()-1;return count>0&&sh.getRange(2,1,count,1).getDisplayValues().some(x=>x[0]===id);}
-function linhasVisoesViagem_(row,eventos,c,foto){
+function linhasVisoesViagem_(row,eventos,c,foto,urlFoto=''){
   const s=estadoViagem_(row,eventos),en=s.entrada,ex=s.saida;
   const chegada=resumoChegada_(row);
-  const base=[row[0],row[4],ESTADOS_TEXTO_[s.status]||s.status,chegada.data,chegada.hora,FIN_BR_[row[12]]||row[12],row[16],row[14],row[13],row[17],row[18],row[19],row[11],JSON.parse(row[23]||'[]').join('; '),JSON.parse(row[24]||'[]').join('; '),foto?'Disponível no sistema':''];
+  const base=[row[0],row[4],ESTADOS_TEXTO_[s.status]||s.status,chegada.data,chegada.hora,FIN_BR_[row[12]]||row[12],row[16],row[14],row[13],row[17],row[18],row[19],row[11],JSON.parse(row[23]||'[]').join('; '),JSON.parse(row[24]||'[]').join('; '),foto?(urlFoto||'Foto antiga: executar atualizarLinksFotos'):''];
   const df=utc=>utc?Utilities.formatDate(new Date(utc),fusoOperacional_(c),'yyyy-MM-dd'):'',hf=utc=>utc?Utilities.formatDate(new Date(utc),fusoOperacional_(c),'HH:mm:ss'):'';
   const ent=base.concat([df(s.entradaUTC),hf(s.entradaUTC),s.agenteEntrada,en?en.tag:'',duracao_(minutos_(row[6],s.entradaUTC)),en?({PROPRIO:'Próprio',EMPRESTADO:'Emprestado',NA:'Não se aplica'}[en.calco]||en.calco):'',s.divergencia+(s.autorizacao?' | '+s.autorizacao.dados.justificativa:''),s.autorizadoPor,checklistTexto_(en?en.checklist:s.retencao?s.retencao.checklist:null)]);
   const ext=ent.concat([df(s.saidaUTC),hf(s.saidaUTC),s.agenteSaida,duracao_(minutos_(s.entradaUTC,s.saidaUTC)),ex?ex.destino:'',ex?ex.faturas.join('; '):'',ex?ex.lacres.join('; '):'',checklistTexto_(ex?ex.checklist:null)]);
   return [base,ent,ext];
 }
 function linkFotoLacre_(sh,linha,row,urlDireta){
-  if(typeof SpreadsheetApp.newRichTextValue!=='function')return;
-  if(urlDireta){sh.getRange(linha,16).setRichTextValue(SpreadsheetApp.newRichTextValue().setText('Ver foto no Drive').setLinkUrl(urlDireta).build());return;}
+  if(urlDireta){sh.getRange(linha,16).setRichTextValue(SpreadsheetApp.newRichTextValue().setText(urlDireta).setLinkUrl(urlDireta).build());return;}
   if(typeof ScriptApp==='undefined')return;
   const url=ScriptApp.getService().getUrl();
   if(url)sh.getRange(linha,16).setRichTextValue(SpreadsheetApp.newRichTextValue().setText('Ver foto do lacre').setLinkUrl(url+'?unidade='+encodeURIComponent(row[1])+'&viagem='+encodeURIComponent(row[0])).build());
@@ -177,7 +176,7 @@ function atualizarViagemVisoes_(ss,c,row,eventos,foto){
   if(c.pais.Pais!=='BR')return;
   const temFoto=typeof foto==='boolean'?foto:temFotoLacre_(ss,row[0]);
   const relacionados=eventos.filter(e=>e[3]===row[0]&&e[4]===row[4]&&e[5]===row[3]);
-  const dados=linhasVisoesViagem_(row,relacionados,c,temFoto)[2],sh=ss.getSheetByName('Controle_BR'),count=sh.getLastRow()-1;
+  const dados=linhasVisoesViagem_(row,relacionados,c,temFoto,temFoto?urlFotoDireta_(ss,row[0]):'')[2],sh=ss.getSheetByName('Controle_BR'),count=sh.getLastRow()-1;
   const ids=count>0?sh.getRange(2,1,count,1).getDisplayValues():[];let linha=0;
   ids.forEach((x,j)=>{if(x[0]===row[0]){if(linha)falhar_('VISAO_ID_DUPLICADO');linha=j+2;}});
   if(!linha)linha=sh.getLastRow()+1;
@@ -192,7 +191,7 @@ function atualizarVisoes_(ss,c){
   const sh=ss.getSheetByName('Controle_BR');conferirCabecalho_(sh,SAIDA_BR_);
   const eventos=indiceEventos_(eventosV3_(ss)),shFoto=ss.getSheetByName('Fotos_v3');conferirCabecalho_(shFoto,FOTO_HEADERS_);
   const fotos=new Set(shFoto.getLastRow()>1?shFoto.getRange(2,1,shFoto.getLastRow()-1,1).getDisplayValues().map(x=>x[0]):[]);
-  const rows=rowsChegadas_(ss).rows.filter(r=>r[3]==='BR').map(row=>linhasVisoesViagem_(row,eventos[row[0]]||[],c,fotos.has(row[0]))[2]);
+  const rows=rowsChegadas_(ss).rows.filter(r=>r[3]==='BR').map(row=>linhasVisoesViagem_(row,eventos[row[0]]||[],c,fotos.has(row[0]),fotos.has(row[0])?urlFotoDireta_(ss,row[0]):'')[2]);
   const old=sh.getLastRow()-1;
   garantirTamanhoControle_(sh,Math.max(2,rows.length+1),33);
   if(rows.length)sh.getRange(2,1,rows.length,SAIDA_BR_.length).setNumberFormat('@').setValues(rows.map(r=>r.map(celulaTexto_)));

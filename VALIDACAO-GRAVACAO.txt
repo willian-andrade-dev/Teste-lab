@@ -21,8 +21,10 @@ PASS Migração converte fotos antigas em lotes sem duplicar arquivos nem perder
 PASS Link do relatório aponta ao Drive e dispensa URL do aplicativo
 PASS Formatação das abas auxiliares preserva dados e não altera Controle_BR
 PASS Saída descarregada dispensa destino e aceita nota/lacre raros com dependência
+PASS Reparo troca texto de disponibilidade por URL real sem alterar outras informações
+PASS Reconstrução mantém URL de foto e reparo converte imagem legada já no relatório
 
-23 testes com serviços Google simulados.
+25 testes com serviços Google simulados.
 Com vinte viagens anteriores, cada chegada/entrada/saída alterou somente uma linha em cada uma das três abas brasileiras.
 A movimentação não leu o conteúdo das imagens dos outros lacres.
 Sem medição de latência no Apps Script real.

@@ -1,3 +1,15 @@
+# Colgate v0.13.1 — Reparar links das fotos
+
+Substitua **Operacao.gs e FotosDrive.gs**, salve e execute **atualizarLinksFotos** no editor como ADMINISTRADOR do país. Essa função converte até 20 fotos antigas por vez e corrige os links em Fotos_v3 e Controle_BR, sem reconstruir ou alterar as outras informações do relatório. Repita enquanto o log indicar fotos convertidas; quando indicar 0, os links existentes já foram reparados. Depois publique uma New version para novas movimentações. Atualize com a fila vazia.
+
+O relatório agora grava o **URL real do arquivo** como texto da célula e aplica também o hyperlink. Não depende mais do marcador “Disponível no sistema”. Reconstruções e atualizações da viagem preservam o endereço. Sem foto no Drive, uma imagem legada recebe indicação explícita de conversão, em vez de aparentar ter link. O caminho de criação do hyperlink não ignora silenciosamente uma falha da API.
+
+A conta que abre o link precisa de acesso à pasta do país no Drive. A autorização do aplicativo, as pastas e o manifesto são os da versão 0.13; não há escopo novo nesta correção. Não é necessário executar prepararOperacao novamente apenas para reparar links. A conversão não duplica arquivos e a imagem antiga só é substituída depois de salva.
+
+Validação: **181 testes locais simulados**, incluindo reparo de célula com marcador, URL e hyperlink reais na simulação, preservação das demais colunas e reconstrução sem perder o link. Sem acesso à planilha/Drive real ou confirmação de prévia visual no Google Sheets.
+
+---
+
 # Colgate v0.13 — Abas de apoio, fotos no Drive e saída descarregada
 
 ## Instalar

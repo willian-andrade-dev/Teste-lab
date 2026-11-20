@@ -27,9 +27,19 @@ function migrarFotosParaDrive(){
   const lock=LockService.getScriptLock();lock.waitLock(30000);
   try{const c=iniciarSessao_();if(c.usuario.Perfil!=='ADMINISTRADOR')falhar_('ACESSO_NEGADO');const ss=planilhaPais_(c),sh=ss.getSheetByName('Fotos_v3');conferirCabecalho_(sh,FOTO_HEADERS_);let n=0;const count=sh.getLastRow()-1,meta=count>0?sh.getRange(2,1,count,4).getDisplayValues():[];
     for(let i=0;i<meta.length&&n<20;i++){if(meta[i][3]!==c.pais.Pais)continue;const image=sh.getRange(i+2,5).getDisplayValue();if(!image.startsWith('data:image/jpeg;base64,'))continue;const url=salvarImagemDrive_(c.pais.Pais,meta[i][0],meta[i][1],validarFotoLacre_(image));sh.getRange(i+2,5).setNumberFormat('@').setValues([[url]]);vincularFotoDrive_(sh,i+2,url);n++;}
-    SpreadsheetApp.flush();const message=n+' fotos convertidas. Repita até converter 0 e execute prepararOperacao para atualizar os links do relatório.';console.log(message);return message;
+    const links=atualizarLinksFotosPais_(ss,c);SpreadsheetApp.flush();const message=n+' fotos convertidas, '+links+' links atualizados. Repita até converter 0. Os links das fotos convertidas já foram atualizados.';console.log(message);return message;
   }finally{lock.releaseLock();}
 }
 
-function vincularFotoDrive_(sh,linha,url){if(typeof SpreadsheetApp.newRichTextValue==='function')sh.getRange(linha,5).setRichTextValue(SpreadsheetApp.newRichTextValue().setText(url).setLinkUrl(url).build());}
+function vincularFotoDrive_(sh,linha,url){sh.getRange(linha,5).setRichTextValue(SpreadsheetApp.newRichTextValue().setText(url).setLinkUrl(url).build());}
 function gravarReferenciaFotoDrive_(sh,linha,row,key,image){const url=salvarImagemDrive_(row[3],row[0],key,image);sh.getRange(linha,1,1,5).setNumberFormat('@').setValues([[row[0],key,row[4],row[3],url]]);vincularFotoDrive_(sh,linha,url);}
+
+/** Repara fotos existentes sem reconstruir ou modificar as outras colunas do relatório. */
+function atualizarLinksFotos(){return migrarFotosParaDrive();}
+function atualizarLinksFotosPais_(ss,c){
+  const photos=ss.getSheetByName('Fotos_v3'),count=photos.getLastRow()-1;if(count<1)return 0;
+  const meta=photos.getRange(2,1,count,4).getDisplayValues(),urls=new Map();let n=0;
+  meta.forEach((r,i)=>{if(r[3]!==c.pais.Pais)return;const value=photos.getRange(i+2,5).getDisplayValue();if(!idFotoDrive_(value))return;vincularFotoDrive_(photos,i+2,value);urls.set(r[0],value);n++;});
+  const report=ss.getSheetByName('Controle_BR');if(c.pais.Pais==='BR'&&report&&report.getLastRow()>1){conferirCabecalho_(report,SAIDA_BR_);const ids=report.getRange(2,1,report.getLastRow()-1,2).getDisplayValues();ids.forEach((r,i)=>{if(urls.has(r[0])){report.getRange(i+2,16).setNumberFormat('@').setValues([[urls.get(r[0])]]);linkFotoLacre_(report,i+2,r,urls.get(r[0]));}});}
+  return n;
+}

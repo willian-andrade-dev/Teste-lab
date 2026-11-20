@@ -1,3 +1,18 @@
+# Colgate v0.14 — Campos individuais de notas e lacres no Brasil
+
+**Instalar:** substitua somente **Index.html**, salve e publique uma New version no Deploy. Nenhuma alteração de planilha, manifesto, escopo ou preparação é necessária. Atualize com a fila vazia.
+
+- Notas e lacres brasileiros deixam de usar uma caixa com um item por linha. Cada nota/lacre tem seu campo; Adicionar outra nota ou Adicionar outro lacre cria mais um campo, com botão Remover para o item adicional.
+- O mesmo componente aparece na chegada (quando a finalidade usa essas informações) e na saída. Coleta continua sem nota na chegada; transferência continua exigindo nota e lacre.
+- A saída carregada exibe asteriscos visíveis e persistentes nos títulos de nota e lacre, inclusive depois de trocar idioma. Todos os campos adicionais abertos precisam ser preenchidos ou removidos.
+- A saída descarregada mantém os botões opcionais da versão anterior. Quando aberta uma nota opcional, também é possível acrescentar mais notas e lacres; remover a nota opcional ou mudar o tipo de saída limpa os itens que ficaram ocultos.
+- O servidor continua recebendo as mesmas listas, com limite de 100 itens por lista; o esquema da planilha e a fila de gravação não mudam. Restaurar uma chegada rejeitada antes de gravar preserva cada item da lista.
+- O projeto registra em PENDENCIAS-COLOMBIA.md a retomada solicitada para 21/11/2026. As telas colombianas de notas/lacres permanecem para a retomada própria.
+
+**Validação:** 186 testes locais simulados; novos casos conferem múltiplos campos, três lacres, remoção de item intermediário, asterisco após tradução, limpeza de dados ocultos e restauração de listas. Sem teste visual no tablet nesta atualização.
+
+---
+
 # Colgate v0.13.1 — Reparar links das fotos
 
 Substitua **Operacao.gs e FotosDrive.gs**, salve e execute **atualizarLinksFotos** no editor como ADMINISTRADOR do país. Essa função converte até 20 fotos antigas por vez e corrige os links em Fotos_v3 e Controle_BR, sem reconstruir ou alterar as outras informações do relatório. Repita enquanto o log indicar fotos convertidas; quando indicar 0, os links existentes já foram reparados. Depois publique uma New version para novas movimentações. Atualize com a fila vazia.

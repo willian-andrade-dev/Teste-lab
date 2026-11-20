@@ -34,7 +34,12 @@ PASS Finalidade aparece antes da transportadora no cartão e no formulário
 PASS Entrada brasileira apresenta dois espaços de assinatura independentes
 PASS Saída descarregada esconde destino/nota/lacre e abre extras em sequência
 PASS Troca de saída carregada para descarregada limpa dados ocultos
+PASS Notas e lacres brasileiros usam campos individuais e preservam a lista ao remover item
+PASS Três lacres são enviados como três itens sem exigir quebras de linha
+PASS Saída carregada exibe estrela persistente e exige todos os campos adicionais
+PASS Trocar para descarregado remove todos os itens adicionais ocultos
+PASS Restaurar solicitação preserva múltiplas notas e lacres
 
-36 testes de lógica do frontend em VM/DOM simulado.
+41 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

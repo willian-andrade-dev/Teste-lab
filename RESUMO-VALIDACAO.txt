@@ -1,4 +1,4 @@
-Versão 0.13.1
-181 testes locais: 18 acesso, 33 chegada, 41 operação, 14 sessão, 36 navegação/UI, 25 gravação/migração/links, 10 fila, 4 medições.
-Serviços Google/Drive, DOM e armazenamento simulados. Sem acesso às planilhas reais.
-Reparo de marcador para URL/hyperlink sem alterar outras colunas; conversão de imagem legada, preservação do link em reconstrução e imagem ainda acessível.
+Versão 0.14
+186 testes locais: 18 acesso, 33 chegada, 41 operação, 14 sessão, 41 navegação/UI, 25 gravação/migração/links, 10 fila, 4 medições.
+Google/Drive, DOM e armazenamento simulados. Sem acesso à implantação real ou teste visual no tablet.
+Novos casos: notas/lacres individuais, múltiplos itens, remoção intermediária, asterisco obrigatório após tradução, limpeza de extras ocultos e restauração de listas.

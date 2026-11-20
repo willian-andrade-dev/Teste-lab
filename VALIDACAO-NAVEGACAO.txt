@@ -13,7 +13,14 @@ PASS Mensagens não reconstroem listas nem seus botões
 PASS Sessão expirada impede atualização sem consultar o servidor
 PASS Registro pendente bloqueia próxima etapa sem bloquear outros registros
 PASS Trocar conta esconde solicitações do usuário anterior
+PASS Ícone abre popup e falha de outra unidade autorizada mostra alerta vermelho
+PASS Concluídos continuam no modelo mas não aparecem na saída
+PASS Identificador técnico não aparece no cartão nem no cabeçalho do checklist
+PASS Tema alterna azul escuro/lua e claro/sol com nome acessível
+PASS Checklist inicia sem resposta e não conformidade torna causa obrigatória
+PASS Bloqueio local evita envio de saída divergente ou calço não devolvido
+PASS Contador agrupa radios obrigatórios e ignora opcionais
 
-15 testes de lógica do frontend em VM/DOM simulado.
+22 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

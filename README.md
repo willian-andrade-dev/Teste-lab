@@ -1,3 +1,18 @@
+# Colgate v0.8 — Interface simplificada para portaria e tablet
+
+**Atualização de 0.7 para 0.8:** substitua somente **Index.html** no Apps Script, salve e publique uma New version no Deploy. Code.gs, Chegada.gs, Operacao.gs, Fila.html e o manifesto permanecem os da versão 0.7. Não altera abas, dados ou permissões. Confirme que não há solicitações pendentes antes de atualizar a implantação.
+
+- O ícone ↻ no canto superior direito abre as solicitações em um popup. Quantidade e movimento indicam envios; uma exclamação vermelha indica falha. O indicador considera todas as unidades autorizadas desta conta e país. Reenvio e correção segura continuam disponíveis, e a exportação CSV fica recolhida em “Tempos de desempenho” dentro do popup. A correção de formulário exige estar na unidade correspondente.
+- O ícone de tema aparece ao lado: sol no modo claro (branco/vermelho), lua no modo escuro (preto/azul). Preferência salva localmente quando permitido. Controles têm nome acessível, foco visível e área de toque de 48 px; animação respeita redução de movimento.
+- Saída apresenta somente caminhões ainda dentro da planta. Concluídos/recusados continuam nas fontes e relatórios, sem lista na tela de saída. Uma view específica para supervisores não faz parte desta atualização.
+- IDs técnicos permanecem no processamento e na planilha, mas não aparecem em cartões, histórico ou cabeçalhos de entrada/saída.
+- Checklist usa grupos de opções grandes (Conforme/Não conforme/N/A), sem marcar tudo automaticamente. Não conformidade exige causa e recebe destaque. Formulários mostram quantidade de obrigatórios preenchidos, destacam faltantes e focam o primeiro inválido. Campos condicionais entram no contador quando aplicáveis; assinaturas ainda são conferidas separadamente.
+- Antes do envio, a interface impede saída com não conformidade/calço não devolvido e entrada divergente sem autorização. O servidor continua validando tudo. Validar no cliente não concede autorização e não substitui a validação real.
+
+A fila, a sessão e as medições de 0.7 continuam funcionando. Não foi alterado o armazenamento Google nem prometida redução da duração real de gravação. Testes locais usam DOM/serviços simulados; o Chromium local não iniciou por restrição do ambiente, portanto esta versão ainda precisa de conferência visual no tablet e na implantação real, especialmente nos dois temas.
+
+---
+
 # Colgate v0.7 — Resposta imediata e medição de desempenho
 
 ## Instalação 0.6 → 0.7

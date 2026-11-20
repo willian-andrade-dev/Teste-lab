@@ -1,3 +1,4 @@
-Versão 0.7
-137 testes locais: 18 acesso, 33 chegada, 35 operação, 14 sessão, 15 navegação, 8 gravação, 10 fila, 4 medições.
+Versão 0.8
+144 testes locais: 18 acesso, 33 chegada, 35 operação, 14 sessão, 22 navegação/UI, 8 gravação, 10 fila, 4 medições.
 Serviços Google, DOM e armazenamento simulados. Sem medição de latência real ou teste visual em tablet/IndexedDB real.
+Novas verificações: popup/alerta, concluídos ocultos, IDs não exibidos, tema, checklist sem resposta automática/causa condicional, bloqueios antes de enviar e contador de obrigatórios.

@@ -1,3 +1,17 @@
+# Colgate v0.10 — Bloqueios antes do envio e saída carregada
+
+**Atualização:** substitua **Chegada.gs, Operacao.gs e Index.html**, salve e publique uma New version no Deploy. Não precisa executar prepararOperacao nem alterar cabeçalhos. Atualize sem solicitações pendentes: as novas regras exigem informações que a versão anterior não enviava. Code.gs, Fila.html e manifesto permanecem iguais.
+
+- Transferência no Brasil exige ao menos uma nota e um lacre. Obrigatoriedade aparece no formulário e é conferida novamente no servidor. A lista de lacres se abre ao preencher notas.
+- A placa brasileira de uma nova chegada segue o formato Mercosul **ABC1D23** (três letras, número, letra, dois números). Ao sair do campo, espaços/hífen são removidos e letras ficam maiúsculas; erros aparecem junto ao campo. O envio bloqueia a placa inválida antes de criar pendência. O servidor aplica o mesmo formato. Registros históricos com placa de formato antigo são preservados. A regra não altera as placas colombianas.
+- Checklist de entrada não oferece N/A para mecânica, vazamentos, pneus, estrutura, luzes e espelhos; na Colômbia, pneus, reserva e extintor também precisam de avaliação. N/A permanece para interior da carreta, cobertura/travessas/lona, outros achados, contêiner e portas/ancoragens. O servidor rejeita N/A nos itens universais, inclusive em payload adulterado.
+- A saída exige responder explicitamente **“O veículo está saindo carregado?”**, sem resposta pré-selecionada. “Sim” exige nota e lacre e não permite N/A para carga/lacres do checklist. “Não” permite notas/lacres opcionais. A decisão fica no evento de saída; as colunas atuais dos relatórios não mudam. A informação depende da conferência do vigilante.
+- O botão Ver foto do lacre não aparece nos cartões da fila de entrada. Na saída, só aparece quando a viagem tem foto realmente armazenada. O painel consulta apenas os IDs das fotos para essa indicação, sem carregar todas as imagens. A foto continua sendo capturada no formulário de entrada quando há nota, conforme v0.9.
+
+**Validação:** 164 testes locais, com Google/DOM/armazenamento simulados. Novos casos conferem transferência sem documentos, saída carregada, ausência de escolha sobre carga, N/A indevido, foto ausente, placa inválida antes do envio e campos condicionais. Não é teste visual da implantação/tablet e não mede latência Google.
+
+---
+
 # Colgate v0.9 — Cadastro de motoristas e foto na entrada
 
 **Atualizar de 0.8:** substitua **Chegada.gs, Operacao.gs e Index.html**, salve e publique uma New version no Deploy. Mantenha Code.gs, Fila.html e o manifesto atuais. Atualize somente quando a fila de solicitações estiver vazia. Não mudam os escopos nem as colunas das abas operacionais existentes.

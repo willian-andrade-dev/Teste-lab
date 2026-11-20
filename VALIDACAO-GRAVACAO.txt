@@ -8,8 +8,11 @@ PASS Repetir operação repara só a viagem sem duplicar o evento
 PASS Preparação administrativa continua reconstruindo relatórios completos
 PASS Falha de foto após evento é reparada com a mesma solicitação sem duplicar entrada
 PASS Falha no cadastro é reparada ao repetir chegada sem criar outra viagem
+PASS Saída exige declaração explícita de carga e documentos quando carregada
+PASS Itens universais rejeitam N/A no servidor; interior da carreta permite
+PASS Transferência exige nota e lacre e placa nova segue Mercosul
 
-10 testes com serviços Google simulados.
+13 testes com serviços Google simulados.
 Com vinte viagens anteriores, cada chegada/entrada/saída alterou somente uma linha em cada uma das três abas brasileiras.
 A movimentação não leu o conteúdo das imagens dos outros lacres.
 Sem medição de latência no Apps Script real.

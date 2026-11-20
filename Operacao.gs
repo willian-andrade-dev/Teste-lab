@@ -6,6 +6,7 @@ const ENTRADA_BR_=BASE_BR_.concat(['Data Entrada','Hora Entrada','Agente Entrada
 const SAIDA_BR_=ENTRADA_BR_.concat(['Data Saída','Hora Saída','Agente Saída','Tempo Permanência','Destino','NF Saída','Lacre Saída','Checklist Saída']);
 const CHECK_BR_=['mecanica','fluidos','pneus','estrutura','luzes','espelhos','interior','cobertura','outros'];
 const CHECK_CO_=['container','pneus','reserva','compuertas','extintor'];
+const CHECK_NA_=['interior','cobertura','outros','container','compuertas','carga','lacres'];
 const CHECK_SAIDA_=['veiculo','carga','lacres'];
 const ESTADOS_TEXTO_={AGUARDANDO_ENTRADA:'Aguardando entrada — fora da planta',PENDENTE_AVALIACAO:'Pendente de avaliação — fora da planta',AGUARDANDO_AUTORIZACAO:'Aguardando autorização — fora da planta',LIBERADO:'Liberado — aguardando entrada',DENTRO_UNIDADE:'Dentro da planta',CONCLUIDO:'Concluído',RECUSADO:'Recusado — fora da planta'};
 const FIN_BR_={COLETA:'Coleta',DEVOLUCAO:'Devolução',TRANSFERENCIA:'Transferência',MOV_PALLET:'Movimentação de pallet',BR14:'BR14 (FTA) - Galpão E'};
@@ -43,7 +44,7 @@ function estadoViagem_(row,eventos){
 function minutos_(inicio,fim){if(!inicio||!fim)return '';const n=Math.floor((new Date(fim).getTime()-new Date(inicio).getTime())/60000);if(!isFinite(n)||n<0)falhar_('HORARIO_INVALIDO');return n;}
 function duracao_(n){return n===''?'':Math.floor(n/60)+'h '+String(n%60).padStart(2,'0')+'m';}
 function entradaPublica_(d){if(!d)return null;const v=Object.assign({},d);delete v.assinaturas;return v;}
-function viagemPublica_(row,eventos){const s=estadoViagem_(row,eventos);return Object.assign(resumoChegada_(row),{placa3:row[19],faturas:JSON.parse(row[23]||'[]'),lacres:JSON.parse(row[24]||'[]'),status:s.status,revisao:s.revisao,entrada:entradaPublica_(s.entrada),retencao:entradaPublica_(s.retencao),divergencia:s.divergencia,autorizadoPor:s.autorizadoPor,entradaUTC:s.entradaUTC,saidaUTC:s.saidaUTC,retencaoMin:minutos_(row[6],s.entradaUTC),permanenciaMin:minutos_(s.entradaUTC,s.saidaUTC)});}
+function viagemPublica_(row,eventos){const s=estadoViagem_(row,eventos);return Object.assign(resumoChegada_(row),{placa3:row[19],temFotoLacre:!!(s.entrada&&s.entrada.fotoLacreHash),faturas:JSON.parse(row[23]||'[]'),lacres:JSON.parse(row[24]||'[]'),status:s.status,revisao:s.revisao,entrada:entradaPublica_(s.entrada),retencao:entradaPublica_(s.retencao),divergencia:s.divergencia,autorizadoPor:s.autorizadoPor,entradaUTC:s.entradaUTC,saidaUTC:s.saidaUTC,retencaoMin:minutos_(row[6],s.entradaUTC),permanenciaMin:minutos_(s.entradaUTC,s.saidaUTC)});}
 function viagemAutorizada_(ss,c,unit,id){
   const found=rowsChegadas_(ss).rows.filter(r=>r[0]===id);
   if(found.length!==1||found[0][3]!==c.pais.Pais||found[0][4]!==unit)falhar_('ACESSO_NEGADO');return found[0];
@@ -54,7 +55,8 @@ function obterPainelOperacaoBackend(codigo){
   const eventos=eventosV3_(ss),rows=rowsChegadas_(ss).rows.filter(x=>x[3]===r.contexto.pais.Pais&&x[4]===r.unidade.Codigo);
   const indice=Object.create(null);
   eventos.forEach(e=>{if(e[4]===r.unidade.Codigo&&e[5]===r.contexto.pais.Pais)(indice[e[3]]||(indice[e[3]]=[])).push(e);});
-  const all=rows.map(x=>viagemPublica_(x,indice[x[0]]||[])).reverse();
+  const photoSheet=ss.getSheetByName('Fotos_v3'),photoCount=photoSheet?photoSheet.getLastRow()-1:0;const fotos=new Set(photoCount>0?photoSheet.getRange(2,1,photoCount,1).getDisplayValues().map(x=>x[0]):[]);
+  const all=rows.map(x=>Object.assign(viagemPublica_(x,indice[x[0]]||[]),{temFotoLacre:fotos.has(x[0])})).reverse();
   return {recentes:all.slice(0,50),entrada:all.filter(x=>!['DENTRO_UNIDADE','CONCLUIDO','RECUSADO'].includes(x.status)),
     saida:all.filter(x=>x.status==='DENTRO_UNIDADE'),concluidos:all.filter(x=>['CONCLUIDO','RECUSADO'].includes(x.status)).slice(0,30),
     podeAutorizar:['GERENTE','ADMINISTRADOR'].includes(r.contexto.usuario.Perfil)};
@@ -65,7 +67,7 @@ function obterInicializacaoUnidadeBackend(codigo){
 }
 function validarChecklist_(v,keys){
   if(!v||typeof v!=='object'||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))falhar_('CHECKLIST_INVALIDO');
-  const out={};keys.forEach(k=>{const x=v[k];if(!x||!['CONFORME','NAO_CONFORME','NA'].includes(x.estado))falhar_('CHECKLIST_INCOMPLETO');const causa=textoChegada_(x.causa,k,300,x.estado==='NAO_CONFORME');out[k]={estado:x.estado,causa:x.estado==='NAO_CONFORME'?causa:''};});return out;
+  const out={};keys.forEach(k=>{const x=v[k];if(!x||!['CONFORME','NAO_CONFORME','NA'].includes(x.estado)||(x.estado==='NA'&&!CHECK_NA_.includes(k)))falhar_('CHECKLIST_INCOMPLETO');const causa=textoChegada_(x.causa,k,300,x.estado==='NAO_CONFORME');out[k]={estado:x.estado,causa:x.estado==='NAO_CONFORME'?causa:''};});return out;
 }
 function temNaoConforme_(chk){return Object.keys(chk).some(k=>chk[k].estado==='NAO_CONFORME');}
 function dadosEntrada_(d,c,unidade){
@@ -95,11 +97,13 @@ function registrarMovimentoCore_(d,med){
       dados={justificativa:textoChegada_(d.justificativa,'justificativa',2000,true)};
     }else if(acao==='SAIDA'){
       const checklist=validarChecklist_(d.checklist,CHECK_SAIDA_);
+      const carregado=textoChegada_(d.carregado,'carregado',3,true);if(!['SIM','NAO'].includes(carregado))falhar_('CAMPO_INVALIDO:carregado');
+      if(carregado==='SIM'&&['carga','lacres'].some(k=>checklist[k].estado==='NA'))falhar_('CHECKLIST_INVALIDO');
       // Nesta etapa divergência na saída bloqueia conclusão; não há liberação tácita.
       if(temNaoConforme_(checklist))falhar_('SAIDA_DIVERGENTE');
       const devolucao=s.entrada&&s.entrada.calco==='EMPRESTADO'?textoChegada_(d.devolucaoCalco,'devolucaoCalco',3,true):'NA';
       if(!['SIM','NAO','NA'].includes(devolucao)||(s.entrada&&s.entrada.calco==='EMPRESTADO'&&devolucao!=='SIM'))falhar_('CALCO_NAO_DEVOLVIDO');
-      dados={checklist,destino:textoChegada_(d.destino,'destino',160,true),faturas:listaChegada_(d.faturas||[],'faturas',false),lacres:listaChegada_(d.lacres||[],'lacres',false),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
+      dados={checklist,carregado,destino:textoChegada_(d.destino,'destino',160,true),faturas:listaChegada_(d.faturas||[],'faturas',carregado==='SIM'),lacres:listaChegada_(d.lacres||[],'lacres',carregado==='SIM'),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
     }else falhar_('ACAO_INVALIDA');
     const foto=acao==='ENTRADA'?validarFotoLacre_(d.fotoLacre):'';
     const exigeFoto=acao==='ENTRADA'&&JSON.parse(row[23]||'[]').length>0;

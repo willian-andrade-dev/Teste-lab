@@ -44,7 +44,7 @@ test('Ciclo completo BR grava sem consultar o controle após login',()=>{
  const checklist=Object.fromEntries(['mecanica','fluidos','pneus','estrutura','luzes','espelhos','interior','cobertura','outros'].map(k=>[k,{estado:'CONFORME',causa:''}]));
  sandbox.registrarMovimentoBackend({unidade:'BR-JAGUARE',id:r.id,acao:'ENTRADA',solicitacao:'session-entry-0001',revisao:0,checklist,calco:'PROPRIO',divergencia:''});
  const out=Object.fromEntries(['veiculo','carga','lacres'].map(k=>[k,{estado:'CONFORME',causa:''}]));
- sandbox.registrarMovimentoBackend({unidade:'BR-JAGUARE',id:r.id,acao:'SAIDA',solicitacao:'session-exit-00001',revisao:1,checklist:out,destino:'Cliente',faturas:[],lacres:[]});
+ sandbox.registrarMovimentoBackend({unidade:'BR-JAGUARE',id:r.id,acao:'SAIDA',carregado:'NAO',solicitacao:'session-exit-00001',revisao:1,checklist:out,destino:'Cliente',faturas:[],lacres:[]});
  assert.equal(sandbox.obterPainelOperacaoBackend('BR-JAGUARE').concluidos[0].status,'CONCLUIDO');assert.equal(controlOpens(),0);
 });
 console.log(tests.join('\n'));console.log(`${tests.length} testes de sessão aprovados.`);

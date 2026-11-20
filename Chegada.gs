@@ -88,7 +88,7 @@ function documentoChegada_(v,pais) {
 function placaChegada_(v,pais,required) {
   const s=textoChegada_(v,'placa',12,required).replace(/[\s-]/g,'').toUpperCase();
   if(!s)return '';
-  const pattern=pais==='BR'?/^[A-Z]{3}\d[A-Z0-9]\d{2}$/:/^[A-Z0-9]{5,10}$/;
+  const pattern=pais==='BR'?/^[A-Z]{3}\d[A-Z]\d{2}$/:/^[A-Z0-9]{5,10}$/;
   if(!pattern.test(s))falhar_('PLACA_INVALIDA');return s;
 }
 function containerChegada_(v) {
@@ -118,7 +118,7 @@ function validarChegada_(d,c,ss) {
   if(out.origem===String(d.unidade||'').trim())falhar_('ORIGEM_INVALIDA');
   if(out.origem&&!c.origens.some(u=>u.Codigo===out.origem))falhar_('ORIGEM_INVALIDA');
   if(out.statusAduaneiro&&!['NACIONALIZADO','DEPOSITO_ADUANEIRO'].includes(out.statusAduaneiro))falhar_('CAMPO_INVALIDO:statusAduaneiro');
-  for(const k of ['faturas','lacres','remitos','produtos'])out[k]=req(k)?listaChegada_(d[k]||[],k,pais!=='BR'):[];
+  for(const k of ['faturas','lacres','remitos','produtos'])out[k]=req(k)?listaChegada_(d[k]||[],k,pais!=='BR'||(fin==='TRANSFERENCIA'&&['faturas','lacres'].includes(k))):[];
   if(fin==='IMPORTACAO'&&out.faturas.length!==1)falhar_('CAMPO_INVALIDO:faturas');
   if(!out.faturas.length&&!req('lacreEntrada'))out.lacres=[];
   if(req('lacreEntrada'))out.lacres=[textoChegada_(d.lacreEntrada,'lacreEntrada',100,true)];

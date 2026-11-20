@@ -25,7 +25,12 @@ PASS Foto está no formulário de entrada e só é obrigatória para viagem com 
 PASS Segunda carreta nasce apenas ao tocar em adicionar e pode ser removida
 PASS Busca pelo CPF preenche motorista e empresa sem bloquear a tela
 PASS Resposta de CPF anterior não preenche documento alterado nem campos editados
+PASS Placa inválida é bloqueada antes de enfileirar solicitação
+PASS Entrada nunca mostra ver foto; saída só quando foto existe
+PASS Opção N/A fica restrita aos itens específicos
+PASS Transferência marca nota e lacre como obrigatórios na interface
+PASS Saída carregada exige nota e lacre sem opção pré-marcada
 
-27 testes de lógica do frontend em VM/DOM simulado.
+32 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

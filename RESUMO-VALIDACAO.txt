@@ -1,4 +1,4 @@
-Versão 0.9
-156 testes locais: 18 acesso, 33 chegada, 40 operação, 14 sessão, 27 navegação/UI, 10 gravação, 10 fila, 4 medições.
-Serviços Google, DOM e armazenamento simulados. Sem gravação em planilhas reais ou validação visual/câmera no tablet.
-Inclui cadastro por país, atualização idempotente, busca sem resposta obsoleta, campos editados preservados, carreta adicional, foto apenas na entrada com nota e reparo de falhas parciais.
+Versão 0.10
+164 testes locais: 18 acesso, 33 chegada, 40 operação, 14 sessão, 32 navegação/UI, 13 gravação, 10 fila, 4 medições.
+Serviços Google, DOM e armazenamento simulados. Sem gravação em planilhas reais ou teste visual no tablet.
+Novas verificações: transferência com nota/lacre, saída carregada explicitamente declarada, checklist sem N/A universal, foto somente quando disponível e bloqueio local de placa Mercosul inválida antes de enfileirar.

@@ -1,3 +1,34 @@
+# Colgate v0.12 — Relatório único e espaçamento da placa adicional
+
+## Atualização necessária
+
+1. Deixe a fila de solicitações vazia e feche o aplicativo nos dispositivos durante a atualização.
+2. Substitua **Operacao.gs e Index.html** e salve. Os demais arquivos permanecem na versão 0.11.
+3. Como ADMINISTRADOR do Brasil, selecione **prepararOperacao** no editor e clique Run. Isso cria/popula/formata Controle_BR a partir das fontes existentes. Aguarde a conclusão.
+4. Publique uma **New version** no Deploy e reabra o aplicativo.
+
+Nesta versão a preparação é necessária, pois a gravação brasileira passa a exigir a aba Controle_BR. Não é necessário editar cabeçalhos manualmente ou alterar permissões. Preparação repetida não duplica viagens. O esquema de outros países permanece igual.
+
+## Relatório consolidado
+
+**Controle_BR** substitui Chegadas_BR, Entradas_BR e Saidas_BR como relatório operacional. Uma linha por ID de viagem reúne as mesmas 33 colunas que já existiam em Saidas_BR, desde a chegada até a saída, inclusive para veículos aguardando entrada ou ainda dentro da planta. A linha é atualizada por ID, preservando o funcionamento se a ordem da tabela for alterada.
+
+As três abas antigas são **ocultadas e preservadas sem reescrever seus dados**, como histórico da transição. Deixam de receber atualizações e podem ser reexibidas pelo menu do Google Sheets, se necessário. Fontes Chegadas_v2, Eventos_v3 e Fotos_v3 continuam sendo os registros técnicos do sistema; o cadastro Motoristas_v3 e os catálogos também são preservados. A consolidação utiliza essas fontes, sem importar edições manuais feitas apenas nos relatórios antigos.
+
+Cada chegada, entrada, retenção, autorização ou saída altera somente **uma linha de relatório**, em vez de três. A reconstrução completa continua restrita à preparação administrativa.
+
+## Apresentação
+
+- Cabeçalhos por grupo: identificação em azul escuro, chegada em vermelho, entrada em azul e saída em verde.
+- Cabeçalho e três primeiras colunas fixos, filtro e linhas alternadas.
+- Larguras maiores para motorista, transportadora, notas, lacres, divergências e checklists.
+- Texto com quebra de linha, alinhamento vertical central e altura ajustada ao conteúdo. A formatação geral ocorre na preparação; a linha movimentada recebe quebra/altura ajustadas sem reconstruir toda a tabela.
+- No aplicativo, botão Remover placa adicional separado do campo por 12 px, em linha própria e com área de toque de pelo menos 48 px.
+
+**Validação:** 171 testes locais com serviços Google/DOM simulados. Incluem migração com preservação dos relatórios antigos, uma única linha por viagem, nova preparação sem duplicação, gravação apenas da viagem alterada e chamadas de formatação/filtro/larguras. Aparência da planilha real e do tablet ainda deve ser conferida após instalar.
+
+---
+
 # Colgate v0.11 — Finalidade visível, horário brasileiro e assinaturas
 
 **Atualização:** substitua **Code.gs, Chegada.gs, Operacao.gs e Index.html**, salve e publique uma New version no Deploy. Fila.html e appsscript.json permanecem iguais. Atualize com a fila vazia: novas entradas e retenções exigem as duas assinaturas. Não há mudança de cabeçalhos ou escopos.

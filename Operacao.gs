@@ -10,21 +10,22 @@ const CHECK_NA_=['interior','cobertura','outros','container','compuertas','carga
 const CHECK_SAIDA_=['veiculo','carga','lacres'];
 const ESTADOS_TEXTO_={AGUARDANDO_ENTRADA:'Aguardando entrada — fora da planta',PENDENTE_AVALIACAO:'Pendente de avaliação — fora da planta',AGUARDANDO_AUTORIZACAO:'Aguardando autorização — fora da planta',LIBERADO:'Liberado — aguardando entrada',DENTRO_UNIDADE:'Dentro da planta',CONCLUIDO:'Concluído',RECUSADO:'Recusado — fora da planta'};
 const FIN_BR_={COLETA:'Coleta',DEVOLUCAO:'Devolução',TRANSFERENCIA:'Transferência',MOV_PALLET:'Movimentação de pallet',BR14:'BR14 (FTA) - Galpão E'};
-function schemasV3_(pais){const s={Eventos_v3:EVENTO_HEADERS_,Fotos_v3:FOTO_HEADERS_};if(pais==='BR')Object.assign(s,{Chegadas_BR:BASE_BR_,Entradas_BR:ENTRADA_BR_,Saidas_BR:SAIDA_BR_});return s;}
+function schemasV3_(pais){const s={Eventos_v3:EVENTO_HEADERS_,Fotos_v3:FOTO_HEADERS_};if(pais==='BR')Object.assign(s,{Controle_BR:SAIDA_BR_});return s;}
 function validarEstruturaV3_(ss,pais){const schemas=schemasV3_(pais);Object.keys(schemas).forEach(n=>conferirCabecalho_(ss.getSheetByName(n),schemas[n]));}
 function prepararOperacao(){
   prepararOperacaoBase_();
   const lock=LockService.getScriptLock();lock.waitLock(30000);
   try{const c=iniciarSessao_();if(c.usuario.Perfil!=='ADMINISTRADOR')falhar_('ACESSO_NEGADO');const ss=planilhaPais_(c),schemas=schemasV3_(c.pais.Pais);
     Object.keys(schemas).forEach(n=>{const sh=ss.getSheetByName(n);if(sh&&sh.getLastRow())conferirCabecalho_(sh,schemas[n]);});
-    Object.keys(schemas).forEach(n=>{const sh=ss.getSheetByName(n)||ss.insertSheet(n);if(!sh.getLastRow()){sh.getRange(1,1,1,schemas[n].length).setValues([schemas[n]]).setFontWeight('bold');sh.setFrozenRows(1);}});
+    Object.keys(schemas).forEach(n=>{const sh=ss.getSheetByName(n)||ss.insertSheet(n);if(n==='Controle_BR')garantirTamanhoControle_(sh,2,33);if(!sh.getLastRow()){sh.getRange(1,1,1,schemas[n].length).setValues([schemas[n]]).setFontWeight('bold');sh.setFrozenRows(1);}});
     atualizarVisoes_(ss,c);
     if(c.pais.Pais==='BR'){
-      // Mantém sempre três abas operacionais visíveis antes de ocultar as técnicas.
-      ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach(n=>ss.getSheetByName(n).showSheet());
+      ss.getSheetByName('Controle_BR').showSheet();
+      formatarControleBrasil_(ss.getSheetByName('Controle_BR'));
+      ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach(n=>{const antiga=ss.getSheetByName(n);if(antiga)antiga.hideSheet();});
       ['Chegadas_v2','Eventos_v3','Fotos_v3'].forEach(n=>ss.getSheetByName(n).hideSheet());
     }
-    SpreadsheetApp.flush();console.log('Versão 0.3 preparada para '+c.pais.Pais+'. Registros existentes preservados.');
+    SpreadsheetApp.flush();console.log('Versão 0.12 preparada para '+c.pais.Pais+'. Registros existentes preservados.');
     return 'Preparação concluída';
   }finally{lock.releaseLock();}
 }
@@ -166,40 +167,47 @@ function linkFotoLacre_(sh,linha,row){
   const url=ScriptApp.getService().getUrl();
   if(url)sh.getRange(linha,16).setRichTextValue(SpreadsheetApp.newRichTextValue().setText('Ver foto do lacre').setLinkUrl(url+'?unidade='+encodeURIComponent(row[1])+'&viagem='+encodeURIComponent(row[0])).build());
 }
-/** Caminho normal de gravação: somente a linha da viagem em cada uma das três abas. */
+/** A gravação atualiza somente uma linha do relatório consolidado. */
 function atualizarViagemVisoes_(ss,c,row,eventos,foto){
   if(c.pais.Pais!=='BR')return;
   const temFoto=typeof foto==='boolean'?foto:temFotoLacre_(ss,row[0]);
   const relacionados=eventos.filter(e=>e[3]===row[0]&&e[4]===row[4]&&e[5]===row[3]);
-  const dados=linhasVisoesViagem_(row,relacionados,c,temFoto);
-  ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach((nome,i)=>{
-    const sh=ss.getSheetByName(nome),count=sh.getLastRow()-1;
-    const ids=count>0?sh.getRange(2,1,count,1).getDisplayValues():[];
-    let linha=0;
-    ids.forEach((x,j)=>{if(x[0]===row[0]){if(linha)falhar_('VISAO_ID_DUPLICADO');linha=j+2;}});
-    if(!linha)linha=sh.getLastRow()+1;
-    sh.getRange(linha,1,1,dados[i].length).setNumberFormat('@').setValues([dados[i].map(celulaTexto_)]);
-    if(temFoto)linkFotoLacre_(sh,linha,dados[i]);
-  });
+  const dados=linhasVisoesViagem_(row,relacionados,c,temFoto)[2],sh=ss.getSheetByName('Controle_BR'),count=sh.getLastRow()-1;
+  const ids=count>0?sh.getRange(2,1,count,1).getDisplayValues():[];let linha=0;
+  ids.forEach((x,j)=>{if(x[0]===row[0]){if(linha)falhar_('VISAO_ID_DUPLICADO');linha=j+2;}});
+  if(!linha)linha=sh.getLastRow()+1;
+  garantirTamanhoControle_(sh,linha,dados.length);
+  sh.getRange(linha,1,1,dados.length).setNumberFormat('@').setValues([dados.map(celulaTexto_)]).setWrap(true).setVerticalAlignment('middle').setBackground(linha%2===0?'#ffffff':'#f3f6fa');
+  sh.autoResizeRows(linha,1);
+  if(temFoto)linkFotoLacre_(sh,linha,dados);
 }
-/** Reconstrução completa fica restrita à preparação administrativa. */
+/** Reconstrução administrativa usa as fontes, sem depender dos três relatórios antigos. */
 function atualizarVisoes_(ss,c){
   if(c.pais.Pais!=='BR')return;
-  const schemas=schemasV3_('BR');
-  ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach(n=>conferirCabecalho_(ss.getSheetByName(n),schemas[n]));
+  const sh=ss.getSheetByName('Controle_BR');conferirCabecalho_(sh,SAIDA_BR_);
   const eventos=indiceEventos_(eventosV3_(ss)),shFoto=ss.getSheetByName('Fotos_v3');conferirCabecalho_(shFoto,FOTO_HEADERS_);
   const fotos=new Set(shFoto.getLastRow()>1?shFoto.getRange(2,1,shFoto.getLastRow()-1,1).getDisplayValues().map(x=>x[0]):[]);
-  const resultado=[[],[],[]];
-  rowsChegadas_(ss).rows.filter(r=>r[3]==='BR').forEach(row=>{
-    const dados=linhasVisoesViagem_(row,eventos[row[0]]||[],c,fotos.has(row[0]));
-    dados.forEach((r,i)=>resultado[i].push(r));
-  });
-  ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach((nome,i)=>{
-    const sh=ss.getSheetByName(nome),rows=resultado[i],old=sh.getLastRow()-1;
-    if(rows.length)sh.getRange(2,1,rows.length,schemas[nome].length).setNumberFormat('@').setValues(rows.map(r=>r.map(celulaTexto_)));
-    rows.forEach((r,j)=>{if(fotos.has(r[0]))linkFotoLacre_(sh,j+2,r);});
-    if(old>rows.length)sh.getRange(rows.length+2,1,old-rows.length,schemas[nome].length).clearContent();
-  });
+  const rows=rowsChegadas_(ss).rows.filter(r=>r[3]==='BR').map(row=>linhasVisoesViagem_(row,eventos[row[0]]||[],c,fotos.has(row[0]))[2]);
+  const old=sh.getLastRow()-1;
+  garantirTamanhoControle_(sh,Math.max(2,rows.length+1),33);
+  if(rows.length)sh.getRange(2,1,rows.length,SAIDA_BR_.length).setNumberFormat('@').setValues(rows.map(r=>r.map(celulaTexto_)));
+  rows.forEach((r,j)=>{if(fotos.has(r[0]))linkFotoLacre_(sh,j+2,r);});
+  if(old>rows.length)sh.getRange(rows.length+2,1,old-rows.length,SAIDA_BR_.length).clearContent();
+}
+/** Formatação é executada apenas na preparação; nenhuma reconstrução visual por atendimento. */
+function formatarControleBrasil_(sh){
+  const total=Math.max(2,sh.getLastRow()),range=sh.getRange(1,1,total,SAIDA_BR_.length);
+  sh.getBandings().forEach(b=>b.remove());
+  range.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
+  range.setFontFamily('Arial').setFontSize(10).setVerticalAlignment('middle').setWrap(true);
+  sh.setFrozenRows(1);sh.setFrozenColumns(3);sh.setRowHeight(1,64);
+  sh.setColumnWidths(1,33,150);sh.setColumnWidth(1,260);sh.setColumnWidth(3,290);
+  [7,8,13,19,24,28,30].forEach(c=>sh.setColumnWidth(c,240));
+  [14,15,23,31,32].forEach(c=>sh.setColumnWidth(c,300));
+  [25,33].forEach(c=>sh.setColumnWidth(c,520));
+  [[1,3,'#243448'],[4,13,'#b91c2b'],[17,9,'#175a9c'],[26,8,'#236b4a']].forEach(([c,n,color])=>sh.getRange(1,c,1,n).setBackground(color).setFontColor('#ffffff').setFontWeight('bold'));
+  if(sh.getFilter())sh.getFilter().remove();range.createFilter();
+  if(total>1){sh.setRowHeights(2,total-1,60);sh.autoResizeRows(2,total-1);}
 }
 
 /** Medições do código executado no servidor; não incluem transporte/inicialização do Apps Script. */
@@ -221,3 +229,5 @@ function enviarOperacaoBackend(pedido){
   }catch(e){const raw=String(e.message||'');const prefix=raw.split(':')[0];const codigo=/^[A-Z][A-Z0-9_]{1,70}$/.test(prefix)?prefix:'ERRO_SERVIDOR';
     return {ok:false,erro:{codigo,gravacaoIniciada:e.medicoes?e.medicoes.gravacaoIniciada:true},medicoes:e.medicoes||null};}
 }
+
+function garantirTamanhoControle_(sh,linhas,colunas){const atuais=sh.getMaxRows(),cols=sh.getMaxColumns();if(linhas>atuais)sh.insertRowsAfter(atuais,linhas-atuais);if(colunas>cols)sh.insertColumnsAfter(cols,colunas-cols);}

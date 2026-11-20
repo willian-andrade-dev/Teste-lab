@@ -1,4 +1,4 @@
-PASS Brasil tem 16 colunas de chegada, 25 de entrada e 33 de saída
+PASS Brasil tem um relatório único com as 33 colunas do ciclo completo
 PASS Origem exclui a própria unidade na configuração
 PASS Servidor rejeita origem igual à unidade mesmo com payload adulterado
 PASS Brasil aceita chegada sem NF e sem lacre
@@ -9,7 +9,7 @@ PASS Entrada física muda estado, grava guarda e mede espera de 30 min
 PASS Duplo envio da entrada é idempotente
 PASS Outro evento de entrada na mesma viagem é bloqueado
 PASS Check de saída divergente bloqueia conclusão
-PASS Saída mede 90 min dentro da planta e conclui as três abas
+PASS Saída mede 90 min dentro da planta e conclui a linha consolidada
 PASS Repetir saída não duplica e não altera horário
 PASS Nova visita após conclusão é aceita
 PASS Viagem de unidade diferente não pode ser movimentada pelo ID

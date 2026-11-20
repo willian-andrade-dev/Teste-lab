@@ -1,4 +1,5 @@
-Versão 0.11
-169 testes locais: 18 acesso, 33 chegada, 40 operação, 14 sessão, 34 navegação/UI, 16 gravação, 10 fila, 4 medições.
-Serviços Google, DOM e armazenamento simulados. Sem gravação em planilhas reais nem teste visual/desenho no tablet.
-Novos casos: finalidade antes da transportadora, duas assinaturas BR obrigatórias e separadas, fuso brasileiro corrigido mesmo com cadastro UTC, horários de chegada/entrada e virada de dia.
+Versão 0.12
+171 testes locais: 18 acesso, 33 chegada, 40 operação, 14 sessão, 34 navegação/UI, 18 gravação/migração, 10 fila, 4 medições.
+Serviços Google, DOM e armazenamento simulados. Sem alteração em planilhas reais nem teste visual no tablet.
+Controle_BR consolida 33 colunas em uma linha por viagem. Migração preserva e oculta três relatórios antigos. Gravação modifica uma única linha, preservando as demais e reparando falha sem duplicar evento.
+Verificadas chamadas de formatação, larguras, filtro, quebra de texto, cores e ajuste de altura.

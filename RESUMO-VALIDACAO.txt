@@ -1,5 +1,4 @@
-Versão 0.12
-171 testes locais: 18 acesso, 33 chegada, 40 operação, 14 sessão, 34 navegação/UI, 18 gravação/migração, 10 fila, 4 medições.
-Serviços Google, DOM e armazenamento simulados. Sem alteração em planilhas reais nem teste visual no tablet.
-Controle_BR consolida 33 colunas em uma linha por viagem. Migração preserva e oculta três relatórios antigos. Gravação modifica uma única linha, preservando as demais e reparando falha sem duplicar evento.
-Verificadas chamadas de formatação, larguras, filtro, quebra de texto, cores e ajuste de altura.
+Versão 0.13
+179 testes locais: 18 acesso, 33 chegada, 41 operação, 14 sessão, 36 navegação/UI, 23 gravação/migração, 10 fila, 4 medições.
+Google Sheets/Drive, DOM e armazenamento simulados. Sem acesso a planilhas/Drive reais ou teste visual no tablet.
+Cobertura nova: abas auxiliares BR/CO formatadas sem alterar valores/Controle_BR, Drive separado por país, leitura autorizada, URLs diretos, reenvio sem cópia, migração em lotes e campos extras na saída descarregada.

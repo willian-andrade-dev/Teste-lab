@@ -16,8 +16,13 @@ PASS Brasil usa São Paulo mesmo se cadastro do país estiver em UTC
 PASS Exibição e reconstrução corrigem data brasileira na virada de dia UTC
 PASS Migração cria uma linha por viagem e preserva/oculta os três relatórios antigos
 PASS Preparação aplica larguras, quebra de texto, cores por etapa e filtro
+PASS Foto é salva no Drive com link direto e reenvio não cria outro arquivo
+PASS Migração converte fotos antigas em lotes sem duplicar arquivos nem perder leitura
+PASS Link do relatório aponta ao Drive e dispensa URL do aplicativo
+PASS Formatação das abas auxiliares preserva dados e não altera Controle_BR
+PASS Saída descarregada dispensa destino e aceita nota/lacre raros com dependência
 
-18 testes com serviços Google simulados.
+23 testes com serviços Google simulados.
 Com vinte viagens anteriores, cada chegada/entrada/saída alterou somente uma linha em cada uma das três abas brasileiras.
 A movimentação não leu o conteúdo das imagens dos outros lacres.
 Sem medição de latência no Apps Script real.

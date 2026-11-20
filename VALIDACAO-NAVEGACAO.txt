@@ -32,7 +32,9 @@ PASS Transferência marca nota e lacre como obrigatórios na interface
 PASS Saída carregada exige nota e lacre sem opção pré-marcada
 PASS Finalidade aparece antes da transportadora no cartão e no formulário
 PASS Entrada brasileira apresenta dois espaços de assinatura independentes
+PASS Saída descarregada esconde destino/nota/lacre e abre extras em sequência
+PASS Troca de saída carregada para descarregada limpa dados ocultos
 
-34 testes de lógica do frontend em VM/DOM simulado.
+36 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

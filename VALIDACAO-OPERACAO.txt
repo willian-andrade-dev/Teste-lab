@@ -38,6 +38,7 @@ PASS Nova visita atualiza cadastro sem duplicar CPF; reenvio antigo não desfaz 
 PASS CPF não encontrado não recebe dados de outro motorista e cabeçalho divergente é preservado
 PASS Coleta não solicita nem persiste notas enviadas indevidamente
 PASS Cadastro e consulta de outro país não revelam CPF brasileiro
+PASS Colômbia tem as seis abas auxiliares formatadas com valores preservados
 
-40 testes locais com serviços simulados.
+41 testes locais com serviços simulados.
 Sem gravação em planilhas reais.

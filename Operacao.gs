@@ -25,7 +25,9 @@ function prepararOperacao(){
       ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach(n=>{const antiga=ss.getSheetByName(n);if(antiga)antiga.hideSheet();});
       ['Chegadas_v2','Eventos_v3','Fotos_v3'].forEach(n=>ss.getSheetByName(n).hideSheet());
     }
-    SpreadsheetApp.flush();console.log('Versão 0.12 preparada para '+c.pais.Pais+'. Registros existentes preservados.');
+    formatarAbasApoio_(ss,c.pais.Pais);
+    console.log('Pasta privada de fotos '+c.pais.Pais+': '+pastaFotosPais_(c.pais.Pais).getUrl());
+    SpreadsheetApp.flush();console.log('Versão 0.13 preparada para '+c.pais.Pais+'. Registros existentes preservados.');
     return 'Preparação concluída';
   }finally{lock.releaseLock();}
 }
@@ -104,7 +106,8 @@ function registrarMovimentoCore_(d,med){
       if(temNaoConforme_(checklist))falhar_('SAIDA_DIVERGENTE');
       const devolucao=s.entrada&&s.entrada.calco==='EMPRESTADO'?textoChegada_(d.devolucaoCalco,'devolucaoCalco',3,true):'NA';
       if(!['SIM','NAO','NA'].includes(devolucao)||(s.entrada&&s.entrada.calco==='EMPRESTADO'&&devolucao!=='SIM'))falhar_('CALCO_NAO_DEVOLVIDO');
-      dados={checklist,carregado,destino:textoChegada_(d.destino,'destino',160,true),faturas:listaChegada_(d.faturas||[],'faturas',carregado==='SIM'),lacres:listaChegada_(d.lacres||[],'lacres',carregado==='SIM'),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
+      dados={checklist,carregado,destino:carregado==='SIM'?textoChegada_(d.destino,'destino',160,true):'',faturas:listaChegada_(d.faturas||[],'faturas',carregado==='SIM'),lacres:listaChegada_(d.lacres||[],'lacres',carregado==='SIM'),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
+      if(carregado==='NAO'&&dados.lacres.length&&!dados.faturas.length)falhar_('CAMPO_OBRIGATORIO:faturas');
     }else falhar_('ACAO_INVALIDA');
     const foto=acao==='ENTRADA'?validarFotoLacre_(d.fotoLacre):'';
     const exigeFoto=acao==='ENTRADA'&&JSON.parse(row[23]||'[]').length>0;
@@ -142,13 +145,13 @@ function salvarFotoLacre_(ss,row,foto,key,entrada=false){
   if(index>=0){
     const existing=meta[index];
     if(existing[2]!==row[4]||existing[3]!==row[3])falhar_('SOLICITACAO_CONFLITANTE');
-    if(existing[1]===key){if(sh.getRange(index+2,5).getDisplayValue()!==image)falhar_('SOLICITACAO_CONFLITANTE');return;}
+    if(existing[1]===key){if(imagemFotoArmazenada_(sh.getRange(index+2,5).getDisplayValue(),row[3])!==image)falhar_('SOLICITACAO_CONFLITANTE');return;}
     if(!entrada)falhar_('SOLICITACAO_CONFLITANTE');
-    sh.getRange(index+2,1,1,5).setNumberFormat('@').setValues([[row[0],key,row[4],row[3],image]]);return;
+    gravarReferenciaFotoDrive_(sh,index+2,row,key,image);return;
   }
-  sh.getRange(sh.getLastRow()+1,1,1,5).setNumberFormat('@').setValues([[row[0],key,row[4],row[3],image]]);
+  gravarReferenciaFotoDrive_(sh,sh.getLastRow()+1,row,key,image);
 }
-function obterFotoLacreBackend(codigo,id){const r=contextoUnidade_(codigo),ss=planilhaPais_(r.contexto);viagemAutorizada_(ss,r.contexto,codigo,textoChegada_(id,'id',100,true));const sh=ss.getSheetByName('Fotos_v3');conferirCabecalho_(sh,FOTO_HEADERS_);if(sh.getLastRow()<2)return '';const row=sh.getRange(2,1,sh.getLastRow()-1,5).getDisplayValues().find(x=>x[0]===id&&x[2]===codigo&&x[3]===r.contexto.pais.Pais);return row?row[4]:'';}
+function obterFotoLacreBackend(codigo,id){const r=contextoUnidade_(codigo),ss=planilhaPais_(r.contexto);viagemAutorizada_(ss,r.contexto,codigo,textoChegada_(id,'id',100,true));const sh=ss.getSheetByName('Fotos_v3');conferirCabecalho_(sh,FOTO_HEADERS_);if(sh.getLastRow()<2)return '';const row=sh.getRange(2,1,sh.getLastRow()-1,5).getDisplayValues().find(x=>x[0]===id&&x[2]===codigo&&x[3]===r.contexto.pais.Pais);return row?imagemFotoArmazenada_(row[4],r.contexto.pais.Pais):'';}
 function checklistTexto_(chk){if(!chk)return '';const labels={mecanica:'Condição mecânica',fluidos:'Ausência de vazamentos',pneus:'Pneus',estrutura:'Estrutura',luzes:'Luzes',espelhos:'Espelhos',interior:'Interior da carreta',cobertura:'Travessas/grades/lona',outros:'Outras condições',container:'Contêiner',reserva:'Pneu reserva',compuertas:'Portas/ancoragens/soldas',extintor:'Extintor',veiculo:'Veículo',carga:'Carga',lacres:'Lacres'};const estados={CONFORME:'Conforme',NAO_CONFORME:'Não conforme',NA:'N/A'};return Object.keys(chk).map(k=>(labels[k]||k)+': '+(estados[chk[k].estado]||chk[k].estado)+(chk[k].causa?' ('+chk[k].causa+')':'')).join(' | ');}
 /** Índice em memória: evita percorrer o histórico inteiro para cada viagem. */
 function indiceEventos_(eventos){const index=Object.create(null);eventos.forEach(e=>(index[e[3]]||(index[e[3]]=[])).push(e));return index;}
@@ -162,8 +165,10 @@ function linhasVisoesViagem_(row,eventos,c,foto){
   const ext=ent.concat([df(s.saidaUTC),hf(s.saidaUTC),s.agenteSaida,duracao_(minutos_(s.entradaUTC,s.saidaUTC)),ex?ex.destino:'',ex?ex.faturas.join('; '):'',ex?ex.lacres.join('; '):'',checklistTexto_(ex?ex.checklist:null)]);
   return [base,ent,ext];
 }
-function linkFotoLacre_(sh,linha,row){
-  if(typeof ScriptApp==='undefined'||typeof SpreadsheetApp.newRichTextValue!=='function')return;
+function linkFotoLacre_(sh,linha,row,urlDireta){
+  if(typeof SpreadsheetApp.newRichTextValue!=='function')return;
+  if(urlDireta){sh.getRange(linha,16).setRichTextValue(SpreadsheetApp.newRichTextValue().setText('Ver foto no Drive').setLinkUrl(urlDireta).build());return;}
+  if(typeof ScriptApp==='undefined')return;
   const url=ScriptApp.getService().getUrl();
   if(url)sh.getRange(linha,16).setRichTextValue(SpreadsheetApp.newRichTextValue().setText('Ver foto do lacre').setLinkUrl(url+'?unidade='+encodeURIComponent(row[1])+'&viagem='+encodeURIComponent(row[0])).build());
 }
@@ -179,7 +184,7 @@ function atualizarViagemVisoes_(ss,c,row,eventos,foto){
   garantirTamanhoControle_(sh,linha,dados.length);
   sh.getRange(linha,1,1,dados.length).setNumberFormat('@').setValues([dados.map(celulaTexto_)]).setWrap(true).setVerticalAlignment('middle').setBackground(linha%2===0?'#ffffff':'#f3f6fa');
   sh.autoResizeRows(linha,1);
-  if(temFoto)linkFotoLacre_(sh,linha,dados);
+  if(temFoto)linkFotoLacre_(sh,linha,dados,urlFotoDireta_(ss,row[0]));
 }
 /** Reconstrução administrativa usa as fontes, sem depender dos três relatórios antigos. */
 function atualizarVisoes_(ss,c){
@@ -191,7 +196,7 @@ function atualizarVisoes_(ss,c){
   const old=sh.getLastRow()-1;
   garantirTamanhoControle_(sh,Math.max(2,rows.length+1),33);
   if(rows.length)sh.getRange(2,1,rows.length,SAIDA_BR_.length).setNumberFormat('@').setValues(rows.map(r=>r.map(celulaTexto_)));
-  rows.forEach((r,j)=>{if(fotos.has(r[0]))linkFotoLacre_(sh,j+2,r);});
+  rows.forEach((r,j)=>{if(fotos.has(r[0]))linkFotoLacre_(sh,j+2,r,urlFotoDireta_(ss,r[0]));});
   if(old>rows.length)sh.getRange(rows.length+2,1,old-rows.length,SAIDA_BR_.length).clearContent();
 }
 /** Formatação é executada apenas na preparação; nenhuma reconstrução visual por atendimento. */
@@ -231,3 +236,14 @@ function enviarOperacaoBackend(pedido){
 }
 
 function garantirTamanhoControle_(sh,linhas,colunas){const atuais=sh.getMaxRows(),cols=sh.getMaxColumns();if(linhas>atuais)sh.insertRowsAfter(atuais,linhas-atuais);if(colunas>cols)sh.insertColumnsAfter(cols,colunas-cols);}
+
+/** Abas auxiliares dos dois países; Controle_BR mantém sua formatação própria. */
+function formatarAbasApoio_(ss,pais){
+  const definitions={Chegadas_v2:{headers:CHEGADA_HEADERS_,color:'#b91c2b'},Motoristas_v3:{headers:MOTORISTA_HEADERS_,color:'#175a9c'},Eventos_v3:{headers:EVENTO_HEADERS_,color:'#475569'},Fotos_v3:{headers:FOTO_HEADERS_,color:'#6d3991'},Produtos_v2:{headers:CATALOGOS_.Produtos_v2,color:'#236b4a'},Transportadoras_v2:{headers:CATALOGOS_.Transportadoras_v2,color:'#176c80'}};
+  Object.keys(definitions).forEach(name=>{const sh=ss.getSheetByName(name);if(!sh)return;const d=definitions[name];conferirCabecalho_(sh,d.headers);const count=Math.max(2,sh.getLastRow()),cols=d.headers.length;garantirTamanhoControle_(sh,count,cols);const gridRows=Math.max(count,sh.getMaxRows()),range=sh.getRange(1,1,gridRows,cols);sh.getBandings().forEach(b=>b.remove());range.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);range.setFontFamily('Arial').setFontSize(10).setVerticalAlignment('middle').setWrap(true);sh.setFrozenRows(1);sh.setFrozenColumns(Math.min(2,cols));sh.setColumnWidths(1,cols,180);sh.setRowHeight(1,58);sh.getRange(1,1,1,cols).setBackground(d.color).setFontColor('#ffffff').setFontWeight('bold');if(sh.getFilter())sh.getFilter().remove();range.createFilter();if(count>1){sh.setRowHeights(2,gridRows-1,54);}
+    d.headers.forEach((header,i)=>{if(/Motorista|Empresa|Nome|RegistradoPor|Autor|Observacao|Dados|Imagem|Faturas|Lacres|Remitos|Produtos/.test(header))sh.setColumnWidth(i+1,/Dados|Observacao/.test(header)?480:300);});
+    if(name==='Eventos_v3')sh.getRange(2,11,gridRows-1,1).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
+    else if(name==='Fotos_v3')sh.getRange(2,5,gridRows-1,1).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
+    else sh.autoResizeRows(2,count-1);
+  });
+}

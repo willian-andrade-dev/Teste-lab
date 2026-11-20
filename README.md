@@ -1,3 +1,38 @@
+# Colgate v0.13 — Abas de apoio, fotos no Drive e saída descarregada
+
+## Instalar
+
+1. Esvazie a fila e feche o aplicativo nos dispositivos durante a atualização.
+2. Substitua **Operacao.gs, Index.html e appsscript.json**. Adicione um arquivo de script chamado **FotosDrive** e copie FotosDrive.gs. Code.gs, Chegada.gs e Fila.html permanecem iguais.
+3. Se o manifesto não estiver visível: Project Settings → Show "appsscript.json" manifest file in editor. O manifesto adiciona o escopo **https://www.googleapis.com/auth/drive** usado pelo DriveApp. O Google pedirá nova autorização para Drive; o escopo é amplo, embora o código trabalhe nas pastas de fotos do aplicativo. Não há serviço avançado a ativar.
+4. Salve e execute **prepararOperacao** com ADMINISTRADOR de cada país. Isso formata as respectivas abas e cria uma pasta privada Logistica_Fotos_BR ou Logistica_Fotos_CO. O link da pasta aparece no Execution log. O país é o da conta cadastrada; não se altera o cadastro de país automaticamente.
+5. Compartilhe a pasta do país com as contas que precisam abrir as fotos (Leitor). Se o web app executa como o usuário que acessa, operadores que enviam fotos também precisam de permissão de Editor na pasta. Se executa como proprietário, esse proprietário precisa de acesso para gravar. Compartilhar a planilha não concede automaticamente acesso à pasta do Drive. O código não envia convites nem muda compartilhamento.
+6. Publique uma **New version** e reabra o aplicativo. Os operadores podem precisar autorizar o novo escopo, conforme a implantação.
+
+## Abas formatadas
+
+Chegadas_v2, Motoristas_v3, Eventos_v3, Fotos_v3, Produtos_v2 e Transportadoras_v2 recebem cabeçalhos com cores próprias, filtro, primeiras colunas e linha de cabeçalho fixas, larguras maiores, linhas alternadas e espaçamento. A formatação também cobre linhas vazias já existentes para acomodar novos registros. Células técnicas com JSON/assinaturas e imagens antigas são exibidas com corte visual, evitando linhas gigantes; o conteúdo completo é preservado. A configuração visual de Controle_BR permanece a mesma.
+
+No Brasil as fontes técnicas continuam ocultas; sua formatação pode ser vista ao reexibir a aba. As três abas de relatório arquivadas da versão 0.12 não são refeitas nem reativadas. Na Colômbia o esquema de abas existente é mantido, sem criar um relatório brasileiro ou renomear cabeçalhos técnicos.
+
+## Fotos
+
+Novas fotos são salvas como JPEG no Drive, em pastas separadas por país. A coluna Imagem de Fotos_v3 passa a guardar o URL direto do arquivo, mantendo o esquema de cinco colunas. Controle_BR usa um link **Ver foto no Drive**; o arquivo abre no visualizador do Drive. O aplicativo continua mostrando a imagem após conferir unidade e país e verificar a pasta do arquivo. Arquivos não são publicados nem compartilhados por link automaticamente.
+
+Reenvio usa nome determinístico por viagem/solicitação/conteúdo para recuperar um arquivo criado antes de uma falha parcial, sem criar outra cópia. Se uma foto antiga da chegada for substituída por uma da entrada, o arquivo anterior não é apagado do Drive. A duração real da gravação passa a incluir o upload; a fila e as medições continuam funcionando.
+
+**Fotos antigas:** execute **migrarFotosParaDrive** como administrador do país. Converte até 20 imagens Base64 por execução, substituindo a célula somente depois de salvar no Drive. Repita até o log indicar 0 fotos convertidas. Depois execute prepararOperacao novamente para atualizar os links do relatório. Sem conversão, as fotos antigas continuam acessíveis pelo aplicativo e o relatório mantém o link anterior para elas. Migração não muda o compartilhamento das pastas.
+
+## Saída descarregada
+
+Ao escolher Não em “O veículo está saindo carregado?”, destino, notas e lacres ficam ocultos/desabilitados. Destino não é exigido nem gravado nessa situação. Um botão Adicionar nota (opcional) revela o campo de nota; só depois de preenchê-la surge Adicionar lacre (opcional). Ao abrir um extra, é preciso preenchê-lo ou removê-lo pelo respectivo botão. Remover a nota também remove/limpa o lacre. Trocar de carregado para descarregado limpa os dados agora ocultos.
+
+Saída carregada continua exigindo destino, nota e lacre. O servidor também impede lacre sem nota em saída descarregada e mantém as demais conferências de checklist, assinaturas e calço.
+
+**Validação:** 179 testes locais com serviços Google, Drive, DOM e armazenamento simulados. Cobrem formatação sem alterar valores, manutenção de Controle_BR, países separados, link direto, migração em lotes, reenvio sem duplicar arquivo e fluxo dos extras na saída. Não houve acesso ao Drive/Sheets real nem teste visual no tablet nesta atualização.
+
+---
+
 # Colgate v0.12 — Relatório único e espaçamento da placa adicional
 
 ## Atualização necessária

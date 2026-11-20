@@ -11,8 +11,11 @@ PASS Falha no cadastro é reparada ao repetir chegada sem criar outra viagem
 PASS Saída exige declaração explícita de carga e documentos quando carregada
 PASS Itens universais rejeitam N/A no servidor; interior da carreta permite
 PASS Transferência exige nota e lacre e placa nova segue Mercosul
+PASS Brasil exige duas assinaturas separadas antes de registrar entrada
+PASS Brasil usa São Paulo mesmo se cadastro do país estiver em UTC
+PASS Exibição e reconstrução corrigem data brasileira na virada de dia UTC
 
-13 testes com serviços Google simulados.
+16 testes com serviços Google simulados.
 Com vinte viagens anteriores, cada chegada/entrada/saída alterou somente uma linha em cada uma das três abas brasileiras.
 A movimentação não leu o conteúdo das imagens dos outros lacres.
 Sem medição de latência no Apps Script real.

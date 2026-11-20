@@ -107,7 +107,7 @@ function contextoUnidade_(codigo) {
 function selecionarUnidadeBackend(codigo) {
   const r = contextoUnidade_(codigo);
   return {sessao:publico_(r.contexto), unidade:r.unidade.Codigo,
-    nome:r.unidade.Nome, fuso:r.contexto.pais.Fuso, operacional:true};
+    nome:r.unidade.Nome, fuso:fusoOperacional_(r.contexto), operacional:true};
 }
 // Ponto de integração para a próxima etapa. Somente funções privadas podem obter a planilha.
 function planilhaOperacional_(codigo) {
@@ -145,3 +145,6 @@ function prepararControle() {
     return 'Estrutura criada. Preencha os cadastros conforme o guia.';
   } finally { lock.releaseLock(); }
 }
+
+/** Unidades brasileiras atuais operam no fuso de São Paulo; UTC permanece na trilha técnica. */
+function fusoOperacional_(c){return c.pais.Pais==='BR'?'America/Sao_Paulo':c.pais.Fuso;}

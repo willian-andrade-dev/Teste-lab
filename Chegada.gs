@@ -140,7 +140,8 @@ function rowsChegadas_(ss) {
   return {sheet:sh,rows:sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,CHEGADA_HEADERS_.length).getDisplayValues():[]};
 }
 function resumoChegada_(row) {
-  return {id:row[0],solicitacao:row[1],unidade:row[4],status:row[5],data:row[7],hora:row[8],oficial:row[11],finalidade:row[12],documento:row[13],motorista:row[14],empresa:row[16],placa1:row[17],placa2:row[18],observacao:row[34]};
+  const timestamp=new Date(row[6]),localBR=row[3]==='BR'&&!isNaN(timestamp.getTime());
+  return {id:row[0],solicitacao:row[1],unidade:row[4],status:row[5],data:localBR?Utilities.formatDate(timestamp,'America/Sao_Paulo','yyyy-MM-dd'):row[7],hora:localBR?Utilities.formatDate(timestamp,'America/Sao_Paulo','HH:mm:ss'):row[8],oficial:row[11],finalidade:row[12],documento:row[13],motorista:row[14],empresa:row[16],placa1:row[17],placa2:row[18],observacao:row[34]};
 }
 function registrarChegadaBackend(dados){return medirOperacao_('CHEGADA',dados,registrarChegadaCore_);}
 function registrarChegadaCore_(dados,med) {
@@ -167,7 +168,7 @@ function registrarChegadaCore_(dados,med) {
     const eventos=eventosV3_(ss),porViagem=indiceEventos_(eventos);
     if(table.rows.some(row=>row[3]===c.pais.Pais&&!['CONCLUIDO','RECUSADO'].includes(estadoViagem_(row,porViagem[row[0]]||[]).status)&&
       (row[13]===novo.documento||row.slice(17,20).some(p=>p&&placas.includes(p)))))falhar_('CHEGADA_ATIVA_EXISTENTE');
-    const agora=new Date(),fuso=c.pais.Fuso;
+    const agora=new Date(),fuso=fusoOperacional_(c);
     const row=[Utilities.getUuid(),key,hash,c.pais.Pais,r.unidade.Codigo,novo.status,agora.toISOString(),
       Utilities.formatDate(agora,fuso,'yyyy-MM-dd'),Utilities.formatDate(agora,fuso,'HH:mm:ss'),fuso,c.email,c.usuario.Nome||c.email,
       novo.finalidade,novo.documento,novo.motorista,novo.telefone,novo.empresa,novo.placa1,novo.placa2,novo.placa3,novo.seguridadeSocial,novo.infracao,

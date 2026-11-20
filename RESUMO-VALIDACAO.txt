@@ -1,4 +1,4 @@
-Versão 0.10
-164 testes locais: 18 acesso, 33 chegada, 40 operação, 14 sessão, 32 navegação/UI, 13 gravação, 10 fila, 4 medições.
-Serviços Google, DOM e armazenamento simulados. Sem gravação em planilhas reais ou teste visual no tablet.
-Novas verificações: transferência com nota/lacre, saída carregada explicitamente declarada, checklist sem N/A universal, foto somente quando disponível e bloqueio local de placa Mercosul inválida antes de enfileirar.
+Versão 0.11
+169 testes locais: 18 acesso, 33 chegada, 40 operação, 14 sessão, 34 navegação/UI, 16 gravação, 10 fila, 4 medições.
+Serviços Google, DOM e armazenamento simulados. Sem gravação em planilhas reais nem teste visual/desenho no tablet.
+Novos casos: finalidade antes da transportadora, duas assinaturas BR obrigatórias e separadas, fuso brasileiro corrigido mesmo com cadastro UTC, horários de chegada/entrada e virada de dia.

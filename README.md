@@ -1,3 +1,17 @@
+# Colgate v0.11 — Finalidade visível, horário brasileiro e assinaturas
+
+**Atualização:** substitua **Code.gs, Chegada.gs, Operacao.gs e Index.html**, salve e publique uma New version no Deploy. Fila.html e appsscript.json permanecem iguais. Atualize com a fila vazia: novas entradas e retenções exigem as duas assinaturas. Não há mudança de cabeçalhos ou escopos.
+
+- Nos cartões de entrada/saída, a finalidade aparece antes da transportadora: “Transferência · Transportadora”. O cabeçalho do formulário também apresenta finalidade, empresa, motorista e placas.
+- As unidades brasileiras atuais (todas em São Paulo) usam **America/Sao_Paulo**, mesmo se a coluna Fuso do país ou a sessão antiga estiver em UTC. Chegada, entrada, saída e relatórios exibem esse horário. Colômbia continua usando seu fuso cadastrado.
+- UTC permanece nas colunas técnicas InstanteUTC/Instante UTC e nos cálculos de duração. Isso preserva os instantes reais e a auditoria. Data/hora de chegada exibidas são calculadas a partir do instante original, inclusive para datas antigas salvas com formatação UTC e para viradas de dia.
+- Novos registros e linhas movimentadas ficam corrigidos automaticamente. Para corrigir também todas as linhas antigas das abas **Chegadas_BR, Entradas_BR e Saidas_BR**, um ADMINISTRADOR pode executar **prepararOperacao** uma vez no editor após substituir os arquivos. Essa reconstrução preserva as fontes/eventos/cadastros e não inventa assinaturas antigas. Campos de data local antigos na fonte técnica não são sobrescritos; a exibição/reconstrução usa o instante original.
+- A entrada brasileira recebe os mesmos dois espaços separados da Colômbia: **assinatura do motorista** e **assinatura do vigilante**. Ambas precisam ser preenchidas. Retenção no módulo de entrada segue a mesma regra já usada pela Colômbia. O servidor rejeita uma assinatura ausente, além da conferência na interface. As assinaturas são persistidas no evento; não são enviadas na listagem pública de viagens. Registros históricos sem assinatura não são alterados.
+
+**Validação:** 169 testes locais, com serviços/DOM simulados. Novos casos verificam ausência de cada assinatura, persistência separada, finalidade antes da empresa, Brasil com cadastro UTC, horário de entrada e virada de dia no fuso de São Paulo. Sem teste visual/desenho de assinatura no tablet ou acesso a planilhas reais nesta atualização.
+
+---
+
 # Colgate v0.10 — Bloqueios antes do envio e saída carregada
 
 **Atualização:** substitua **Chegada.gs, Operacao.gs e Index.html**, salve e publique uma New version no Deploy. Não precisa executar prepararOperacao nem alterar cabeçalhos. Atualize sem solicitações pendentes: as novas regras exigem informações que a versão anterior não enviava. Code.gs, Fila.html e manifesto permanecem iguais.

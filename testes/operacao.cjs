@@ -26,7 +26,7 @@ user[2]='BR';user[3]='BR-JAGUARE;BR-IMIGRANTES';control.sheets.Unidades.rows.pus
 const chk=(state='CONFORME')=>Object.fromEntries(['mecanica','fluidos','pneus','estrutura','luzes','espelhos','interior','cobertura','outros'].map(k=>[k,{estado:state,causa:state==='NAO_CONFORME'?'Problema observado':''}]));
 const outChk=()=>Object.fromEntries(['veiculo','carga','lacres'].map(k=>[k,{estado:'CONFORME',causa:''}]));
 const arrival=(extra={})=>payload({unidade:'BR-JAGUARE',finalidade:'COLETA',documento:'52998224725',placa1:'ABC1D23',placa2:'',faturas:[],solicitacao:'arrival-v03-000001',...extra});
-const event=(trip,acao,extra={})=>({unidade:'BR-JAGUARE',id:trip.id,solicitacao:'event-v03-'+acao+'-'+String(uuid).padStart(8,'0'),revisao:trip.revisao||0,acao,carregado:'NAO',checklist:chk(),calco:'PROPRIO',divergencia:'',...extra});
+const event=(trip,acao,extra={})=>({unidade:'BR-JAGUARE',id:trip.id,solicitacao:'event-v03-'+acao+'-'+String(uuid).padStart(8,'0'),revisao:trip.revisao||0,acao,carregado:'NAO',checklist:chk(),calco:'PROPRIO',assinaturaMotorista:'data:image/png;base64,iVBORw0KGgo=',assinaturaGuarda:'data:image/png;base64,iVBORw0KGgo=',divergencia:'',...extra});
 const current=()=>sandbox.obterPainelOperacaoBackend('BR-JAGUARE');
 const brRows=()=>books.br.sheets.Chegadas_v2.rows;
 let trip,entered,departed;

@@ -30,7 +30,9 @@ PASS Entrada nunca mostra ver foto; saída só quando foto existe
 PASS Opção N/A fica restrita aos itens específicos
 PASS Transferência marca nota e lacre como obrigatórios na interface
 PASS Saída carregada exige nota e lacre sem opção pré-marcada
+PASS Finalidade aparece antes da transportadora no cartão e no formulário
+PASS Entrada brasileira apresenta dois espaços de assinatura independentes
 
-32 testes de lógica do frontend em VM/DOM simulado.
+34 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

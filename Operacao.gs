@@ -76,7 +76,7 @@ function dadosEntrada_(d,c,unidade){
   const tag=textoChegada_(d.tag,'tag',60,false);if(tag&&!imigrantes)falhar_('TAG_NAO_APLICAVEL');
   const calco=c.pais.Pais==='BR'?textoChegada_(d.calco,'calco',20,true):'NA';if(!['PROPRIO','EMPRESTADO','NA'].includes(calco))falhar_('CAMPO_INVALIDO:calco');
   const divergencia=textoChegada_(d.divergencia,'divergencia',2000,temNaoConforme_(checklist));
-  const assinaturas={motorista:assinatura_(d.assinaturaMotorista,c.pais.Pais==='CO'),guarda:assinatura_(d.assinaturaGuarda,c.pais.Pais==='CO')};
+  const assinaturas={motorista:assinatura_(d.assinaturaMotorista,true),guarda:assinatura_(d.assinaturaGuarda,true)};
   return {checklist,tag,calco,divergencia,assinaturas};
 }
 function assinatura_(v,required){const s=textoChegada_(v,'assinatura',16000,required);if(s&&!/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(s))falhar_('ASSINATURA_INVALIDA');return s;}
@@ -154,8 +154,9 @@ function indiceEventos_(eventos){const index=Object.create(null);eventos.forEach
 function temFotoLacre_(ss,id){const sh=ss.getSheetByName('Fotos_v3'),count=sh.getLastRow()-1;return count>0&&sh.getRange(2,1,count,1).getDisplayValues().some(x=>x[0]===id);}
 function linhasVisoesViagem_(row,eventos,c,foto){
   const s=estadoViagem_(row,eventos),en=s.entrada,ex=s.saida;
-  const base=[row[0],row[4],ESTADOS_TEXTO_[s.status]||s.status,row[7],row[8],FIN_BR_[row[12]]||row[12],row[16],row[14],row[13],row[17],row[18],row[19],row[11],JSON.parse(row[23]||'[]').join('; '),JSON.parse(row[24]||'[]').join('; '),foto?'Disponível no sistema':''];
-  const df=utc=>utc?Utilities.formatDate(new Date(utc),c.pais.Fuso,'yyyy-MM-dd'):'',hf=utc=>utc?Utilities.formatDate(new Date(utc),c.pais.Fuso,'HH:mm:ss'):'';
+  const chegada=resumoChegada_(row);
+  const base=[row[0],row[4],ESTADOS_TEXTO_[s.status]||s.status,chegada.data,chegada.hora,FIN_BR_[row[12]]||row[12],row[16],row[14],row[13],row[17],row[18],row[19],row[11],JSON.parse(row[23]||'[]').join('; '),JSON.parse(row[24]||'[]').join('; '),foto?'Disponível no sistema':''];
+  const df=utc=>utc?Utilities.formatDate(new Date(utc),fusoOperacional_(c),'yyyy-MM-dd'):'',hf=utc=>utc?Utilities.formatDate(new Date(utc),fusoOperacional_(c),'HH:mm:ss'):'';
   const ent=base.concat([df(s.entradaUTC),hf(s.entradaUTC),s.agenteEntrada,en?en.tag:'',duracao_(minutos_(row[6],s.entradaUTC)),en?({PROPRIO:'Próprio',EMPRESTADO:'Emprestado',NA:'Não se aplica'}[en.calco]||en.calco):'',s.divergencia+(s.autorizacao?' | '+s.autorizacao.dados.justificativa:''),s.autorizadoPor,checklistTexto_(en?en.checklist:s.retencao?s.retencao.checklist:null)]);
   const ext=ent.concat([df(s.saidaUTC),hf(s.saidaUTC),s.agenteSaida,duracao_(minutos_(s.entradaUTC,s.saidaUTC)),ex?ex.destino:'',ex?ex.faturas.join('; '):'',ex?ex.lacres.join('; '):'',checklistTexto_(ex?ex.checklist:null)]);
   return [base,ent,ext];

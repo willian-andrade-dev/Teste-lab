@@ -154,12 +154,12 @@ function registrarChegadaBackend(dados) {
     if(repetida){
       if(repetida[3]!==c.pais.Pais||repetida[4]!==r.unidade.Codigo||repetida[10]!==c.email||repetida[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');
       salvarFotoLacre_(ss,repetida,dados.fotoLacre,key);
-      atualizarVisoes_(ss,c);SpreadsheetApp.flush();
+      atualizarViagemVisoes_(ss,c,repetida,eventosV3_(ss),!!dados.fotoLacre);SpreadsheetApp.flush();
       return Object.assign(viagemPublica_(repetida,eventosV3_(ss)),{repetida:true});
     }
     const placas=[novo.placa1,novo.placa2,novo.placa3].filter(Boolean);
-    const eventos=eventosV3_(ss);
-    if(table.rows.some(row=>row[3]===c.pais.Pais&&!['CONCLUIDO','RECUSADO'].includes(estadoViagem_(row,eventos).status)&&
+    const eventos=eventosV3_(ss),porViagem=indiceEventos_(eventos);
+    if(table.rows.some(row=>row[3]===c.pais.Pais&&!['CONCLUIDO','RECUSADO'].includes(estadoViagem_(row,porViagem[row[0]]||[]).status)&&
       (row[13]===novo.documento||row.slice(17,20).some(p=>p&&placas.includes(p)))))falhar_('CHEGADA_ATIVA_EXISTENTE');
     const agora=new Date(),fuso=c.pais.Fuso;
     const row=[Utilities.getUuid(),key,hash,c.pais.Pais,r.unidade.Codigo,novo.status,agora.toISOString(),
@@ -169,7 +169,7 @@ function registrarChegadaBackend(dados) {
       novo.containerConfirmado?'SIM':'',novo.comodato,JSON.stringify(novo.produtos),novo.destino,novo.areaDestino,novo.statusAduaneiro,novo.observacao];
     table.sheet.getRange(table.sheet.getLastRow()+1,1,1,row.length).setNumberFormat('@').setValues([row.map(celulaTexto_)]);
     salvarFotoLacre_(ss,row,dados.fotoLacre,key);
-    atualizarVisoes_(ss,c);SpreadsheetApp.flush();return Object.assign(viagemPublica_(row,eventos),{repetida:false});
+    atualizarViagemVisoes_(ss,c,row,eventos,!!dados.fotoLacre);SpreadsheetApp.flush();return Object.assign(viagemPublica_(row,eventos),{repetida:false});
   } finally {lock.releaseLock();}
 }
 function listarChegadasBackend(codigo) {

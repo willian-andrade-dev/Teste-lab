@@ -1,4 +1,20 @@
-# Colgate v0.5 — Chegada, Entrada e Saída
+# Colgate v0.6 — Chegada, Entrada e Saída
+
+## Gravação incremental — versão 0.6
+
+A gravação anterior reconstruía Chegadas_BR, Entradas_BR e Saidas_BR inteiras em cada chegada, entrada, saída ou aprovação. Essa reconstrução relia o histórico e até as imagens de todos os lacres, além de reescrever linhas de viagens que não tinham mudado.
+
+Agora a movimentação grava a fonte/evento e atualiza somente a linha da viagem em cada uma das três abas. A localização usa o ID da viagem, preservando o funcionamento quando as abas estão ordenadas de formas diferentes. As linhas dos demais motoristas não são reescritas.
+
+O caminho de gravação reaproveita os dados e eventos que já foram lidos. A conferência de existência de foto lê apenas a coluna de IDs; uma foto nova consulta os metadados, e uma repetição consulta o conteúdo somente da foto correspondente. As imagens de outras viagens não são carregadas para atualizar o status de um caminhão.
+
+Permanecem a trava de concorrência, revisão do registro, conferências de etapa/unidade/perfil, identificação da conta e idempotência. A confirmação continua após SpreadsheetApp.flush() e a atualização das três linhas: não há sucesso antecipado nem envio de gravação em segundo plano.
+
+A reconstrução completa de relatórios continua disponível em prepararOperacao, para migração ou reparo administrativo. Se houve falha parcial após gravar um evento, repetir a mesma solicitação repara as linhas daquela viagem sem duplicar o evento. Não altere manualmente os IDs das abas geradas.
+
+**Atualização de 0.5 para 0.6:** substitua Chegada.gs e Operacao.gs, salve e publique uma New version no Deploy. Index.html também contém a identificação 0.6 e pode ser atualizado junto. Não muda nenhuma coluna, cadastro, permissão ou propriedade; não é necessário executar prepararOperacao para instalar esta versão.
+
+Nos testes com vinte viagens prévias, chegada/entrada/saída alteraram somente três linhas de relatório no total, e as demais permaneceram intactas. O teste também verificou que uma movimentação não lê o conteúdo das fotos dos outros lacres. Os testes são simulados e não medem latência do serviço Google real. A chamada ao Apps Script, a leitura de dados operacionais e a confirmação efetiva ainda podem levar algum tempo; esta atualização remove o trabalho repetido identificado no código, sem prometer gravação instantânea.
 
 ## Navegação sem espera de leitura — versão 0.5
 
@@ -75,7 +91,7 @@ Data Saída; Hora Saída; Agente Saída; Tempo Permanência; Destino; NF Saída;
 
 Os status distinguem aguardando entrada (fora), pendente de avaliação (fora), aguardando autorização (fora), liberado aguardando entrada física, dentro da planta, concluído e recusado (fora).
 
-As três abas são visualizações geradas pelo sistema: não altere nelas status, horários ou checklists manualmente, pois os valores serão regenerados na próxima operação. Os dados técnicos ficam em Chegadas_v2, Eventos_v3 e Fotos_v3, ocultados no Brasil. Ocultar uma aba organiza a tela; não cria uma nova camada de permissão para quem tem acesso direto à planilha. As demais abas antigas não são removidas.
+As três abas são visualizações geradas pelo sistema: não altere nelas status, horários ou checklists manualmente, pois os valores daquela viagem serão regenerados na próxima movimentação ou numa reconstrução administrativa. Os dados técnicos ficam em Chegadas_v2, Eventos_v3 e Fotos_v3, ocultados no Brasil. Ocultar uma aba organiza a tela; não cria uma nova camada de permissão para quem tem acesso direto à planilha. As demais abas antigas não são removidas.
 
 Se uma atualização de visualização falhar após gravar um evento, o registro do evento é preservado. Repetir exatamente a mesma operação repara as visualizações sem duplicar o evento. Um administrador também pode executar prepararOperacao para reconstruí-las a partir das fontes preservadas.
 
@@ -139,3 +155,5 @@ Esta versão já registra o ciclo chegada/entrada/saída e a autorização de en
 Relatórios de acesso, chegada e operação estão no pacote, com testes executáveis em testes/. Usam serviços Google simulados; não gravam nas suas planilhas. Incluem ciclo completo, tempos, duplicidades, autorização por conta, isolamento de unidades, migração e reparo de visualizações. Sintaxe dos quatro arquivos e estrutura estática das três telas foram verificadas. O teste visual interativo no navegador/tablet e as gravações reais precisam ser feitos na sua implantação.
 
 Testes adicionais de sessão: testes/sessao.cjs e VALIDACAO-SESSAO.txt. Documentação do armazenamento por conta: https://developers.google.com/apps-script/guides/properties.
+
+Testes adicionais de gravação incremental: testes/gravacao.cjs e VALIDACAO-GRAVACAO.txt.

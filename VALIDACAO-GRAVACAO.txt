@@ -1,0 +1,13 @@
+PASS Chegada grava apenas três linhas de relatório com vinte viagens prévias
+PASS Entrada atualiza apenas a viagem e preserva as outras dezenove linhas
+PASS Saída atualiza apenas três linhas e devolve confirmação concluída
+PASS Movimentação não lê as imagens dos demais lacres
+PASS Foto nova lê metadados e não transfere todas as fotos antigas
+PASS Abas ordenadas de forma diferente continuam atualizadas pelo ID
+PASS Repetir operação repara só a viagem sem duplicar o evento
+PASS Preparação administrativa continua reconstruindo relatórios completos
+
+8 testes com serviços Google simulados.
+Com vinte viagens anteriores, cada chegada/entrada/saída alterou somente uma linha em cada uma das três abas brasileiras.
+A movimentação não leu o conteúdo das imagens dos outros lacres.
+Sem medição de latência no Apps Script real.

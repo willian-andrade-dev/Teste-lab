@@ -101,7 +101,7 @@ function registrarMovimentoBackend(d){
       dados={checklist,destino:textoChegada_(d.destino,'destino',160,true),faturas:listaChegada_(d.faturas||[],'faturas',false),lacres:listaChegada_(d.lacres||[],'lacres',false),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
     }else falhar_('ACAO_INVALIDA');
     const hash=hashV3_({acao,dados});const repetido=eventos.find(e=>e[1]===key);
-    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');atualizarVisoes_(ss,c);SpreadsheetApp.flush();return {viagem:viagemPublica_(row,eventos),repetida:true};}
+    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');atualizarViagemVisoes_(ss,c,row,eventos);SpreadsheetApp.flush();return {viagem:viagemPublica_(row,eventos),repetida:true};}
     if(!Number.isInteger(d.revisao)||d.revisao!==s.revisao)falhar_('REGISTRO_ATUALIZADO');
     if(['ENTRADA','RETER'].includes(acao)&&!['AGUARDANDO_ENTRADA','PENDENTE_AVALIACAO','AGUARDANDO_AUTORIZACAO','LIBERADO'].includes(s.status))falhar_('TRANSICAO_INVALIDA');
     if(acao==='RETER'&&!dados.divergencia)falhar_('CAMPO_OBRIGATORIO:divergencia');
@@ -116,26 +116,74 @@ function registrarMovimentoBackend(d){
     const event=[Utilities.getUuid(),key,hash,id,r.unidade.Codigo,c.pais.Pais,acao,new Date().toISOString(),c.email,c.usuario.Nome||c.email,JSON.stringify(dados)];
     if(event[10].length>45000)falhar_('ANEXO_MUITO_GRANDE');
     const sh=ss.getSheetByName('Eventos_v3');sh.getRange(sh.getLastRow()+1,1,1,event.length).setNumberFormat('@').setValues([event.map(celulaTexto_)]);
-    eventos.push(event);atualizarVisoes_(ss,c);SpreadsheetApp.flush();return {viagem:viagemPublica_(row,eventos),repetida:false};
+    eventos.push(event);atualizarViagemVisoes_(ss,c,row,eventos);SpreadsheetApp.flush();return {viagem:viagemPublica_(row,eventos),repetida:false};
   }finally{lock.releaseLock();}
 }
 function validarFotoLacre_(v){const s=textoChegada_(v,'fotoLacre',40000,false);if(s&&!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s))falhar_('FOTO_INVALIDA');if(s&&s.indexOf('data:image/jpeg;base64,/9j/')!==0)falhar_('FOTO_INVALIDA');return s;}
-function salvarFotoLacre_(ss,row,foto,key){const s=validarFotoLacre_(foto);if(!s)return;const sh=ss.getSheetByName('Fotos_v3');conferirCabecalho_(sh,FOTO_HEADERS_);const rows=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,5).getDisplayValues():[];const old=rows.find(x=>x[0]===row[0]);if(old){if(old[1]!==key||old[4]!==s)falhar_('SOLICITACAO_CONFLITANTE');return;}sh.getRange(sh.getLastRow()+1,1,1,5).setNumberFormat('@').setValues([[row[0],key,row[4],row[3],s]]);}
+function salvarFotoLacre_(ss,row,foto,key){
+  const image=validarFotoLacre_(foto);if(!image)return;
+  const sh=ss.getSheetByName('Fotos_v3');
+  const count=sh.getLastRow()-1;
+  // Procura só os metadados; não transfere as imagens de todas as viagens.
+  const meta=count>0?sh.getRange(2,1,count,4).getDisplayValues():[];
+  const index=meta.findIndex(x=>x[0]===row[0]);
+  if(index>=0){
+    const existing=meta[index];
+    if(existing[1]!==key||existing[2]!==row[4]||existing[3]!==row[3]||sh.getRange(index+2,5).getDisplayValue()!==image)falhar_('SOLICITACAO_CONFLITANTE');
+    return;
+  }
+  sh.getRange(sh.getLastRow()+1,1,1,5).setNumberFormat('@').setValues([[row[0],key,row[4],row[3],image]]);
+}
 function obterFotoLacreBackend(codigo,id){const r=contextoUnidade_(codigo),ss=planilhaPais_(r.contexto);viagemAutorizada_(ss,r.contexto,codigo,textoChegada_(id,'id',100,true));const sh=ss.getSheetByName('Fotos_v3');conferirCabecalho_(sh,FOTO_HEADERS_);if(sh.getLastRow()<2)return '';const row=sh.getRange(2,1,sh.getLastRow()-1,5).getDisplayValues().find(x=>x[0]===id&&x[2]===codigo&&x[3]===r.contexto.pais.Pais);return row?row[4]:'';}
 function checklistTexto_(chk){if(!chk)return '';const labels={mecanica:'Condição mecânica',fluidos:'Ausência de vazamentos',pneus:'Pneus',estrutura:'Estrutura',luzes:'Luzes',espelhos:'Espelhos',interior:'Interior da carreta',cobertura:'Travessas/grades/lona',outros:'Outras condições',container:'Contêiner',reserva:'Pneu reserva',compuertas:'Portas/ancoragens/soldas',extintor:'Extintor',veiculo:'Veículo',carga:'Carga',lacres:'Lacres'};const estados={CONFORME:'Conforme',NAO_CONFORME:'Não conforme',NA:'N/A'};return Object.keys(chk).map(k=>(labels[k]||k)+': '+(estados[chk[k].estado]||chk[k].estado)+(chk[k].causa?' ('+chk[k].causa+')':'')).join(' | ');}
+/** Índice em memória: evita percorrer o histórico inteiro para cada viagem. */
+function indiceEventos_(eventos){const index=Object.create(null);eventos.forEach(e=>(index[e[3]]||(index[e[3]]=[])).push(e));return index;}
+function temFotoLacre_(ss,id){const sh=ss.getSheetByName('Fotos_v3'),count=sh.getLastRow()-1;return count>0&&sh.getRange(2,1,count,1).getDisplayValues().some(x=>x[0]===id);}
+function linhasVisoesViagem_(row,eventos,c,foto){
+  const s=estadoViagem_(row,eventos),en=s.entrada,ex=s.saida;
+  const base=[row[0],row[4],ESTADOS_TEXTO_[s.status]||s.status,row[7],row[8],FIN_BR_[row[12]]||row[12],row[16],row[14],row[13],row[17],row[18],row[19],row[11],JSON.parse(row[23]||'[]').join('; '),JSON.parse(row[24]||'[]').join('; '),foto?'Disponível no sistema':''];
+  const df=utc=>utc?Utilities.formatDate(new Date(utc),c.pais.Fuso,'yyyy-MM-dd'):'',hf=utc=>utc?Utilities.formatDate(new Date(utc),c.pais.Fuso,'HH:mm:ss'):'';
+  const ent=base.concat([df(s.entradaUTC),hf(s.entradaUTC),s.agenteEntrada,en?en.tag:'',duracao_(minutos_(row[6],s.entradaUTC)),en?({PROPRIO:'Próprio',EMPRESTADO:'Emprestado',NA:'Não se aplica'}[en.calco]||en.calco):'',s.divergencia+(s.autorizacao?' | '+s.autorizacao.dados.justificativa:''),s.autorizadoPor,checklistTexto_(en?en.checklist:s.retencao?s.retencao.checklist:null)]);
+  const ext=ent.concat([df(s.saidaUTC),hf(s.saidaUTC),s.agenteSaida,duracao_(minutos_(s.entradaUTC,s.saidaUTC)),ex?ex.destino:'',ex?ex.faturas.join('; '):'',ex?ex.lacres.join('; '):'',checklistTexto_(ex?ex.checklist:null)]);
+  return [base,ent,ext];
+}
+function linkFotoLacre_(sh,linha,row){
+  if(typeof ScriptApp==='undefined'||typeof SpreadsheetApp.newRichTextValue!=='function')return;
+  const url=ScriptApp.getService().getUrl();
+  if(url)sh.getRange(linha,16).setRichTextValue(SpreadsheetApp.newRichTextValue().setText('Ver foto do lacre').setLinkUrl(url+'?unidade='+encodeURIComponent(row[1])+'&viagem='+encodeURIComponent(row[0])).build());
+}
+/** Caminho normal de gravação: somente a linha da viagem em cada uma das três abas. */
+function atualizarViagemVisoes_(ss,c,row,eventos,foto){
+  if(c.pais.Pais!=='BR')return;
+  const temFoto=typeof foto==='boolean'?foto:temFotoLacre_(ss,row[0]);
+  const relacionados=eventos.filter(e=>e[3]===row[0]&&e[4]===row[4]&&e[5]===row[3]);
+  const dados=linhasVisoesViagem_(row,relacionados,c,temFoto);
+  ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach((nome,i)=>{
+    const sh=ss.getSheetByName(nome),count=sh.getLastRow()-1;
+    const ids=count>0?sh.getRange(2,1,count,1).getDisplayValues():[];
+    let linha=0;
+    ids.forEach((x,j)=>{if(x[0]===row[0]){if(linha)falhar_('VISAO_ID_DUPLICADO');linha=j+2;}});
+    if(!linha)linha=sh.getLastRow()+1;
+    sh.getRange(linha,1,1,dados[i].length).setNumberFormat('@').setValues([dados[i].map(celulaTexto_)]);
+    if(temFoto)linkFotoLacre_(sh,linha,dados[i]);
+  });
+}
+/** Reconstrução completa fica restrita à preparação administrativa. */
 function atualizarVisoes_(ss,c){
   if(c.pais.Pais!=='BR')return;
-  const schemas=schemasV3_('BR');['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach(n=>conferirCabecalho_(ss.getSheetByName(n),schemas[n]));
-  const eventos=eventosV3_(ss),shFoto=ss.getSheetByName('Fotos_v3');conferirCabecalho_(shFoto,FOTO_HEADERS_);
-  const fotos=shFoto.getLastRow()>1?shFoto.getRange(2,1,shFoto.getLastRow()-1,5).getDisplayValues().map(x=>x[0]):[];
-  const chegada=[],entrada=[],saida=[];
+  const schemas=schemasV3_('BR');
+  ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach(n=>conferirCabecalho_(ss.getSheetByName(n),schemas[n]));
+  const eventos=indiceEventos_(eventosV3_(ss)),shFoto=ss.getSheetByName('Fotos_v3');conferirCabecalho_(shFoto,FOTO_HEADERS_);
+  const fotos=new Set(shFoto.getLastRow()>1?shFoto.getRange(2,1,shFoto.getLastRow()-1,1).getDisplayValues().map(x=>x[0]):[]);
+  const resultado=[[],[],[]];
   rowsChegadas_(ss).rows.filter(r=>r[3]==='BR').forEach(row=>{
-    const s=estadoViagem_(row,eventos),en=s.entrada,ex=s.saida;
-    const base=[row[0],row[4],ESTADOS_TEXTO_[s.status]||s.status,row[7],row[8],FIN_BR_[row[12]]||row[12],row[16],row[14],row[13],row[17],row[18],row[19],row[11],JSON.parse(row[23]||'[]').join('; '),JSON.parse(row[24]||'[]').join('; '),fotos.includes(row[0])?'Disponível no sistema':''];
-    const df=utc=>utc?Utilities.formatDate(new Date(utc),c.pais.Fuso,'yyyy-MM-dd'):'',hf=utc=>utc?Utilities.formatDate(new Date(utc),c.pais.Fuso,'HH:mm:ss'):'';
-    const ent=base.concat([df(s.entradaUTC),hf(s.entradaUTC),s.agenteEntrada,en?en.tag:'',duracao_(minutos_(row[6],s.entradaUTC)),en?({PROPRIO:'Próprio',EMPRESTADO:'Emprestado',NA:'Não se aplica'}[en.calco]||en.calco):'',s.divergencia+(s.autorizacao?' | '+s.autorizacao.dados.justificativa:''),s.autorizadoPor,checklistTexto_(en?en.checklist:s.retencao?s.retencao.checklist:null)]);
-    const ext=ent.concat([df(s.saidaUTC),hf(s.saidaUTC),s.agenteSaida,duracao_(minutos_(s.entradaUTC,s.saidaUTC)),ex?ex.destino:'',ex?ex.faturas.join('; '):'',ex?ex.lacres.join('; '):'',checklistTexto_(ex?ex.checklist:null)]);
-    chegada.push(base);entrada.push(ent);saida.push(ext);
+    const dados=linhasVisoesViagem_(row,eventos[row[0]]||[],c,fotos.has(row[0]));
+    dados.forEach((r,i)=>resultado[i].push(r));
   });
-  [['Chegadas_BR',chegada],['Entradas_BR',entrada],['Saidas_BR',saida]].forEach(([nome,rows])=>{const sh=ss.getSheetByName(nome),old=sh.getLastRow()-1;if(rows.length)sh.getRange(2,1,rows.length,schemas[nome].length).setNumberFormat('@').setValues(rows.map(r=>r.map(celulaTexto_)));if(typeof ScriptApp!=='undefined'&&typeof SpreadsheetApp.newRichTextValue==='function'){const url=ScriptApp.getService().getUrl();if(url)rows.forEach((row,i)=>{if(fotos.includes(row[0]))sh.getRange(i+2,16).setRichTextValue(SpreadsheetApp.newRichTextValue().setText('Ver foto do lacre').setLinkUrl(url+'?unidade='+encodeURIComponent(row[1])+'&viagem='+encodeURIComponent(row[0])).build());});}if(old>rows.length)sh.getRange(rows.length+2,1,old-rows.length,schemas[nome].length).clearContent();});
+  ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach((nome,i)=>{
+    const sh=ss.getSheetByName(nome),rows=resultado[i],old=sh.getLastRow()-1;
+    if(rows.length)sh.getRange(2,1,rows.length,schemas[nome].length).setNumberFormat('@').setValues(rows.map(r=>r.map(celulaTexto_)));
+    rows.forEach((r,j)=>{if(fotos.has(r[0]))linkFotoLacre_(sh,j+2,r);});
+    if(old>rows.length)sh.getRange(rows.length+2,1,old-rows.length,schemas[nome].length).clearContent();
+  });
 }

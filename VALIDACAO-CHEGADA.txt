@@ -1,0 +1,36 @@
+PASS País deve ser preparado antes de usar chegada
+PASS Preparação não altera dados legados
+PASS Preparação idempotente
+PASS Colômbia recebe oito finalidades e catálogos
+PASS Unidade de outro país bloqueada
+PASS Obrigatórios validados no servidor
+PASS Transportadora fora do cadastro bloqueada
+PASS Finalidade de outro país bloqueada
+PASS Gravação usa país, e-mail e horário do servidor
+PASS Repetir solicitação não duplica linha
+PASS Mesmo identificador com outros dados é bloqueado
+PASS Nova solicitação com motorista ativo é bloqueada
+PASS Placa ativa não pode reaparecer em outra unidade do país
+PASS Lista de outra unidade não vaza registros
+PASS Histórico por documento e placa encontra observação
+PASS Consulta sem filtro é bloqueada
+PASS Novo login aplica bloqueio e invalida sessão anterior
+PASS Segurança não pode preparar estrutura
+PASS Contêiner correto passa; dígito errado é rejeitado
+PASS Exportação exige confirmação física
+PASS Produto inexistente bloqueado
+PASS Lista de faturas preserva todos os valores
+PASS Lista com valores duplicados é rejeitada
+PASS Infração gera pendência de avaliação
+PASS Seguridade não vigente gera pendência
+PASS Outra entrega permite empresa livre sem catálogo
+PASS Todas as oito finalidades aceitam seus campos específicos
+PASS Payload excessivo não grava dados parciais
+PASS Não compartilha planilha operacional entre países
+PASS Não grava na própria planilha de controle
+PASS Brasil usa CPF e finalidades brasileiras
+PASS Neutraliza fórmulas sem executar conteúdo do usuário
+PASS Cabeçalhos divergentes não são sobrescritos
+
+33 testes com serviços Google simulados aprovados.
+Não houve acesso a planilhas reais.

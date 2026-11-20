@@ -1,0 +1,34 @@
+PASS Brasil tem 16 colunas de chegada, 25 de entrada e 33 de saída
+PASS Origem exclui a própria unidade na configuração
+PASS Servidor rejeita origem igual à unidade mesmo com payload adulterado
+PASS Brasil aceita chegada sem NF e sem lacre
+PASS Entrada não pode ocorrer sem checklist completo
+PASS TAG bloqueada fora de Imigrantes
+PASS Saída antes da entrada é bloqueada
+PASS Entrada física muda estado, grava guarda e mede espera de 30 min
+PASS Duplo envio da entrada é idempotente
+PASS Outro evento de entrada na mesma viagem é bloqueado
+PASS Check de saída divergente bloqueia conclusão
+PASS Saída mede 90 min dentro da planta e conclui as três abas
+PASS Repetir saída não duplica e não altera horário
+PASS Nova visita após conclusão é aceita
+PASS Viagem de unidade diferente não pode ser movimentada pelo ID
+PASS Divergência não libera automaticamente a entrada
+PASS Guarda retém e envia para aprovação sem registrar entrada física
+PASS Guarda não pode declarar quem autorizou por texto livre
+PASS Revisão desatualizada impede decisão concorrente
+PASS Aprovação identifica gerente autenticado e mantém fora da planta
+PASS Checklist alterado após autorização exige nova avaliação
+PASS Entrada autorizada preserva decisão e permite calço emprestado
+PASS Calço emprestado precisa ser devolvido antes da saída
+PASS Saída conclui após devolver calço
+PASS Bloqueio em cadastro não consulta nem interrompe sessão ativa
+PASS Foto de lacre é persistida por viagem e consulta é autorizada por unidade
+PASS Conteúdo de foto HTML não é aceito
+PASS Falha na projeção pode ser reparada sem duplicar evento
+PASS TAG é disponível somente em Imigrantes
+PASS Preparar novamente preserva fonte e eventos existentes
+PASS Migração reaproveita linha da versão 0.2 sem depender do hash antigo
+
+31 testes locais com serviços simulados.
+Sem gravação em planilhas reais.

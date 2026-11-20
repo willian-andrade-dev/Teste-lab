@@ -1,0 +1,18 @@
+PASS Operação sem login falha sem consultar cadastro
+PASS Login faz validação completa e devolve vencimento de quatro horas
+PASS Cinquenta verificações de unidade não abrem planilha de controle
+PASS Navegação, listas e histórico não revalidam cadastro
+PASS Bloqueio de usuário aguarda próximo login
+PASS Sessão ainda vale um milissegundo antes de quatro horas
+PASS Sessão vence exatamente em quatro horas sem revalidar cadastro
+PASS Atividade não prolonga sessão automaticamente
+PASS Novo login renova prazo após validar o cadastro
+PASS Perfil e país não podem ser trocados por payload no navegador
+PASS Mudança de perfil no cadastro só vale no próximo login
+PASS Sessão de uma conta não é aceita por outra
+PASS Sessão corrompida é descartada sem abrir planilhas
+PASS Ciclo completo BR grava sem consultar o controle após login
+
+14 testes com serviços simulados aprovados.
+Cinquenta conferências de unidade e um ciclo completo de chegada/entrada/saída sem abrir a planilha de controle após o login.
+Sem medição de latência na implantação real.

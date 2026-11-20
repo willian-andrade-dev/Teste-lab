@@ -1,0 +1,6 @@
+.clasp.json
+.env
+.env.*
+node_modules/
+referencias/
+*.zip

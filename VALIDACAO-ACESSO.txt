@@ -1,0 +1,21 @@
+PASS Conta ativa recebe apenas unidade cadastrada
+PASS Resposta não expõe ID da planilha
+PASS Seleção válida habilita módulo de chegada
+PASS Unidade de outro país bloqueada
+PASS Planilha operacional resolvida no servidor
+PASS Perfil de segurança não pode aprovar
+PASS Bloqueio passa a valer no próximo login
+PASS E-mail desconhecido bloqueado
+PASS Identidade vazia bloqueada
+PASS Domínio parecido não é aceito
+PASS E-mail duplicado bloqueado
+PASS Cadastro não permite unidade de outro país
+PASS País inativo bloqueado
+PASS Unidade inativa bloqueada
+PASS Perfil arbitrário bloqueado
+PASS Idioma usa padrão do país quando vazio
+PASS ID de planilha não pode ser substituído por argumento extra
+PASS Conta BR resolve outra planilha e outras unidades
+
+18 testes locais de autorização aprovados. Serviços Google simulados.
+Implantação e autenticação reais ainda não testadas.

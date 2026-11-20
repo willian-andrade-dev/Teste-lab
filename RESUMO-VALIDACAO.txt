@@ -1,6 +1,6 @@
-Versão 0.4
-18 testes de acesso + 33 de chegada + 31 de operação + 14 de sessão = 96 testes locais.
-Testes executados com serviços Google simulados. Não houve acesso a planilhas reais.
-50 conferências de unidade e um ciclo completo sem abrir a planilha de controle após login.
-Sintaxe, manifesto JSON e estrutura estática verificados.
-Latência real e comportamento no navegador/tablet ainda precisam ser homologados na implantação.
+Versão 0.5
+18 testes de acesso + 33 de chegada + 35 de operação + 14 de sessão + 13 de navegação = 113 testes locais aprovados.
+Backend testado com serviços Google simulados; frontend com lógica em VM e DOM simulado.
+Trinta trocas de aba com dados carregados sem RPC; leitura em segundo plano sem bloquear controles; respostas antigas descartadas.
+Sintaxe dos quatro arquivos, manifesto JSON e IDs estáticos do HTML verificados.
+Sem medição de latência ou teste visual na implantação real.

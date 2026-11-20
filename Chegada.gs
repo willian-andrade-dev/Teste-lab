@@ -155,7 +155,7 @@ function registrarChegadaBackend(dados) {
       if(repetida[3]!==c.pais.Pais||repetida[4]!==r.unidade.Codigo||repetida[10]!==c.email||repetida[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');
       salvarFotoLacre_(ss,repetida,dados.fotoLacre,key);
       atualizarVisoes_(ss,c);SpreadsheetApp.flush();
-      return Object.assign(resumoChegada_(repetida),{repetida:true});
+      return Object.assign(viagemPublica_(repetida,eventosV3_(ss)),{repetida:true});
     }
     const placas=[novo.placa1,novo.placa2,novo.placa3].filter(Boolean);
     const eventos=eventosV3_(ss);
@@ -169,7 +169,7 @@ function registrarChegadaBackend(dados) {
       novo.containerConfirmado?'SIM':'',novo.comodato,JSON.stringify(novo.produtos),novo.destino,novo.areaDestino,novo.statusAduaneiro,novo.observacao];
     table.sheet.getRange(table.sheet.getLastRow()+1,1,1,row.length).setNumberFormat('@').setValues([row.map(celulaTexto_)]);
     salvarFotoLacre_(ss,row,dados.fotoLacre,key);
-    atualizarVisoes_(ss,c);SpreadsheetApp.flush();return Object.assign(resumoChegada_(row),{repetida:false});
+    atualizarVisoes_(ss,c);SpreadsheetApp.flush();return Object.assign(viagemPublica_(row,eventos),{repetida:false});
   } finally {lock.releaseLock();}
 }
 function listarChegadasBackend(codigo) {

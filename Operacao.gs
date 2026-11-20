@@ -48,7 +48,21 @@ function viagemAutorizada_(ss,c,unit,id){
   const found=rowsChegadas_(ss).rows.filter(r=>r[0]===id);
   if(found.length!==1||found[0][3]!==c.pais.Pais||found[0][4]!==unit)falhar_('ACESSO_NEGADO');return found[0];
 }
-function obterPainelOperacaoBackend(codigo){const r=contextoUnidade_(codigo),ss=planilhaPais_(r.contexto);validarEstruturaV3_(ss,r.contexto.pais.Pais);const ev=eventosV3_(ss),rows=rowsChegadas_(ss).rows.filter(x=>x[3]===r.contexto.pais.Pais&&x[4]===codigo);const all=rows.map(x=>viagemPublica_(x,ev)).reverse();return {entrada:all.filter(x=>!['DENTRO_UNIDADE','CONCLUIDO','RECUSADO'].includes(x.status)),saida:all.filter(x=>x.status==='DENTRO_UNIDADE'),concluidos:all.filter(x=>['CONCLUIDO','RECUSADO'].includes(x.status)).slice(0,30),podeAutorizar:['GERENTE','ADMINISTRADOR'].includes(r.contexto.usuario.Perfil)};}
+function obterPainelOperacaoBackend(codigo){
+  const r=contextoUnidade_(codigo),ss=planilhaPais_(r.contexto);
+  // Leitura do painel consulta apenas as duas fontes, sem validar as abas de relatório.
+  const eventos=eventosV3_(ss),rows=rowsChegadas_(ss).rows.filter(x=>x[3]===r.contexto.pais.Pais&&x[4]===r.unidade.Codigo);
+  const indice=Object.create(null);
+  eventos.forEach(e=>{if(e[4]===r.unidade.Codigo&&e[5]===r.contexto.pais.Pais)(indice[e[3]]||(indice[e[3]]=[])).push(e);});
+  const all=rows.map(x=>viagemPublica_(x,indice[x[0]]||[])).reverse();
+  return {recentes:all.slice(0,50),entrada:all.filter(x=>!['DENTRO_UNIDADE','CONCLUIDO','RECUSADO'].includes(x.status)),
+    saida:all.filter(x=>x.status==='DENTRO_UNIDADE'),concluidos:all.filter(x=>['CONCLUIDO','RECUSADO'].includes(x.status)).slice(0,30),
+    podeAutorizar:['GERENTE','ADMINISTRADOR'].includes(r.contexto.usuario.Perfil)};
+}
+/** Uma única chamada inicial devolve configuração e todas as listas da unidade. */
+function obterInicializacaoUnidadeBackend(codigo){
+  return {config:obterConfiguracaoChegadaBackend(codigo),painel:obterPainelOperacaoBackend(codigo)};
+}
 function validarChecklist_(v,keys){
   if(!v||typeof v!=='object'||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))falhar_('CHECKLIST_INVALIDO');
   const out={};keys.forEach(k=>{const x=v[k];if(!x||!['CONFORME','NAO_CONFORME','NA'].includes(x.estado))falhar_('CHECKLIST_INCOMPLETO');const causa=textoChegada_(x.causa,k,300,x.estado==='NAO_CONFORME');out[k]={estado:x.estado,causa:x.estado==='NAO_CONFORME'?causa:''};});return out;

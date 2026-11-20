@@ -1,4 +1,20 @@
-# Colgate v0.4 — Chegada, Entrada e Saída
+# Colgate v0.5 — Chegada, Entrada e Saída
+
+## Navegação sem espera de leitura — versão 0.5
+
+Corrigida uma segunda causa de demora: a versão anterior ainda buscava o painel a cada troca de aba e desabilitava todos os controles durante a leitura. Agora Chegada, Entrada e Saída abrem com os dados que já estão na memória da página, e o checklist pode ser aberto enquanto uma atualização de leitura está em andamento.
+
+A seleção inicial de uma unidade recebe configuração, últimas chegadas e filas numa única chamada após o login. Reabrir uma unidade durante a mesma sessão aproveita os dados já carregados. Ao navegar com dados de mais de quinze segundos, ou tocar em Atualizar lista, a consulta roda em segundo plano sem bloquear os botões. Não há consulta repetida a cada clique em abas com dados recentes, nem consulta automática periódica enquanto a tela permanece parada.
+
+Um indicador informa quando os registros estão sendo atualizados ou quando a atualização falhou. Em caso de falha de leitura, os dados anteriores continuam visíveis. A gravação física de chegada/entrada/saída continua exigindo confirmação do servidor e impede duplo envio.
+
+Após confirmação de gravação, o recibo atualiza imediatamente as listas locais; uma leitura em segundo plano verifica os demais registros. Respostas antigas de leitura são descartadas se a unidade, sessão ou revisão local mudaram, evitando desfazer visualmente uma operação já confirmada. Ao enviar uma operação, o servidor continua validando a revisão real da viagem para impedir decisões sobre registros alterados por outro dispositivo.
+
+O leitor do painel agora consulta apenas as fontes necessárias e agrupa os eventos por viagem, sem conferir novamente todas as abas de relatório. A gravação e a preparação das abas continuam com suas validações.
+
+**Atualização de 0.4 para 0.5:** substitua Index.html, Operacao.gs e Chegada.gs no Apps Script. Salve e publique uma New version no Deploy. Code.gs e appsscript.json não mudaram; não precisa executar prepararOperacao nem refazer cadastros. Reabra o endereço /exec após atualizar.
+
+Os testes de lógica assíncrona em testes/navegacao.cjs cobrem trinta trocas de aba sem RPC após a carga, uso de checklist durante leitura, descarte de respostas antigas, isolamento de unidade e proteção contra duplo envio. Isso comprova o comportamento da lógica; não é uma medição de latência ou teste visual no Apps Script real. A primeira carga, fotos buscadas no servidor e confirmação de gravações ainda podem levar segundos conforme o Google e a conexão.
 
 ## Sessão de quatro horas — alteração da versão 0.4
 

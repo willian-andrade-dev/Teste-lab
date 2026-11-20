@@ -29,6 +29,10 @@ PASS Falha na projeção pode ser reparada sem duplicar evento
 PASS TAG é disponível somente em Imigrantes
 PASS Preparar novamente preserva fonte e eventos existentes
 PASS Migração reaproveita linha da versão 0.2 sem depender do hash antigo
+PASS Painel devolve chegadas recentes junto com filas
+PASS Inicialização devolve configuração e painel numa única API
+PASS Leitura do painel não consulta abas compactas de relatório
+PASS Recibo de chegada repetida preserva etapa atual já concluída
 
-31 testes locais com serviços simulados.
+35 testes locais com serviços simulados.
 Sem gravação em planilhas reais.

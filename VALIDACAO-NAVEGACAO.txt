@@ -1,0 +1,17 @@
+PASS Trinta trocas de aba com dados recentes não fazem RPC
+PASS Atualização atrasada não bloqueia navegação ou campos
+PASS Checklist pode abrir enquanto o servidor atualiza em segundo plano
+PASS Cliques repetidos em atualizar compartilham a chamada em andamento
+PASS Retorno de leitura antiga não desfaz uma entrada confirmada
+PASS Retorno de leitura de outra unidade é ignorado
+PASS Leitura antiga não habilita controles durante gravação
+PASS Gravações continuam aguardando confirmação e impedindo duplo envio
+PASS Resposta de erro ao atualizar preserva dados anteriores e botões
+PASS Confirmação da saída move registro para concluídos sem nova leitura
+PASS Inicialização da unidade usa uma chamada para configuração e listas
+PASS Mensagens não reconstroem listas nem seus botões
+PASS Sessão expirada impede atualização sem consultar o servidor
+
+13 testes de lógica do frontend em VM/DOM simulado.
+Trinta trocas de aba após carga inicial sem RPC.
+Não é uma medição de latência nem um teste visual no navegador real.

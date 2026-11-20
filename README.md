@@ -1,3 +1,24 @@
+# Colgate v0.9 — Cadastro de motoristas e foto na entrada
+
+**Atualizar de 0.8:** substitua **Chegada.gs, Operacao.gs e Index.html**, salve e publique uma New version no Deploy. Mantenha Code.gs, Fila.html e o manifesto atuais. Atualize somente quando a fila de solicitações estiver vazia. Não mudam os escopos nem as colunas das abas operacionais existentes.
+
+## Alterações
+
+- “Últimas chegadas” foi retirada da tela. Entrada e saída continuam disponíveis, assim como busca de histórico pelo botão existente.
+- A primeira chegada confirmada cadastra o motorista em **Motoristas_v3**, na mesma planilha operacional do país. A aba é criada automaticamente quando necessária; prepararOperacao também a prepara. País, documento, nome, empresa, telefone, instante e última viagem ficam registrados. As próximas visitas atualizam o cadastro, sem duplicar o documento. Reenvio de uma chegada antiga não desfaz dados de visita posterior. Não sobrescreve uma aba legada Motoristas.
+- Ao completar o CPF brasileiro (ou sair do campo de documento em outros países), a busca em segundo plano preenche nome e empresa. Campos continuam editáveis. Respostas de outro documento, unidade, país ou sessão são descartadas; dados digitados manualmente durante a busca não são sobrescritos. Empresa que não esteja no catálogo ativo exige seleção manual. A busca não preenche placas, checklist, aprovação ou situação de segurança social a partir de visitas anteriores.
+- Unidades autorizadas de um mesmo país compartilham o cadastro desse país. Conta sem autorização para o país/unidade não consulta esse cadastro pela API. Registros históricos anteriores à atualização não são importados automaticamente para o cadastro: novas chegadas confirmadas o alimentam.
+- **Coleta no Brasil não mostra nem grava notas na chegada.** Notas da coleta podem ser registradas na saída, como antes.
+- “Placa da carreta” não tem mais “se houver”. O botão **+** ao lado cria o campo da segunda carreta no Brasil, com opção de removê-lo. As três colunas existentes (cavalo e até duas carretas) são preservadas; não há expansão ilimitada de placas.
+- Foto do lacre saiu da chegada. No módulo de entrada, a presença de pelo menos uma nota/fatura salva na viagem mostra a foto e a torna obrigatória ao confirmar a entrada física. Sem nota, não mostra nem aceita foto. Reter/solicitar aprovação não exige a foto de entrada. No Brasil, a lista de lacres da chegada aparece apenas quando há nota; a confirmação segue conferindo as regras no servidor.
+- Foto continua compactada e protegida pela unidade; fotos antigas não são apagadas. Uma foto nova da entrada pode substituir a foto legada da chegada da mesma viagem. A impressão digital da imagem integra a idempotência do evento, sem colocar a imagem inteira no JSON do checklist. Se houver falha parcial após gravar evento/cadastro, repetir a mesma solicitação repara o restante sem duplicar.
+
+A regra da foto usa **notas realmente vinculadas à viagem**, não apenas a finalidade selecionada. Não adiciona obrigatoriedade de nota para finalidades brasileiras que atualmente permitem nota opcional.
+
+**Validação:** 156 testes locais com serviços Google/DOM/armazenamento simulados. Inclui consulta e isolamento por país, atualização sem duplicidade, resposta atrasada de CPF, edição manual durante busca, placa adicional, foto obrigatória/indevida e reparação de falhas parciais. Sem gravação em planilhas reais ou validação visual da câmera/tablet nesta atualização.
+
+---
+
 # Colgate v0.8 — Interface simplificada para portaria e tablet
 
 **Atualização de 0.7 para 0.8:** substitua somente **Index.html** no Apps Script, salve e publique uma New version no Deploy. Code.gs, Chegada.gs, Operacao.gs, Fila.html e o manifesto permanecem os da versão 0.7. Não altera abas, dados ou permissões. Confirme que não há solicitações pendentes antes de atualizar a implantação.

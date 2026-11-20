@@ -8,7 +8,7 @@ const FINALIDADES_ = {
     MATERIA_PRIMA:['faturas','lacres','areaDestino','produtos'],
     IMPORTACAO:['faturas','lacres','statusAduaneiro','produtos'], OUTRA:['empresaOutra']
   },
-  BR: {COLETA:['faturas'],DEVOLUCAO:['faturas','lacres'],TRANSFERENCIA:['faturas','lacres','origem'],MOV_PALLET:['faturas'],BR14:['faturas']}
+  BR: {COLETA:[],DEVOLUCAO:['faturas','lacres'],TRANSFERENCIA:['faturas','lacres','origem'],MOV_PALLET:['faturas'],BR14:['faturas']}
 };
 const CATALOGOS_ = {
   Produtos_v2:['Codigo','Nome','Status'],
@@ -32,7 +32,7 @@ function prepararOperacaoBase_() {
     const c=iniciarSessao_();
     if(c.usuario.Perfil!=='ADMINISTRADOR') falhar_('ACESSO_NEGADO');
     const ss=planilhaPais_(c);
-    const schemas=Object.assign({Chegadas_v2:CHEGADA_HEADERS_},CATALOGOS_);
+    const schemas=Object.assign({Chegadas_v2:CHEGADA_HEADERS_,Motoristas_v3:MOTORISTA_HEADERS_},CATALOGOS_);
     Object.keys(schemas).forEach(nome=>{const sh=ss.getSheetByName(nome);if(sh&&sh.getLastRow())conferirCabecalho_(sh,schemas[nome]);});
     Object.keys(schemas).forEach(nome=>{
       const sh=ss.getSheetByName(nome)||ss.insertSheet(nome);
@@ -120,6 +120,7 @@ function validarChegada_(d,c,ss) {
   if(out.statusAduaneiro&&!['NACIONALIZADO','DEPOSITO_ADUANEIRO'].includes(out.statusAduaneiro))falhar_('CAMPO_INVALIDO:statusAduaneiro');
   for(const k of ['faturas','lacres','remitos','produtos'])out[k]=req(k)?listaChegada_(d[k]||[],k,pais!=='BR'):[];
   if(fin==='IMPORTACAO'&&out.faturas.length!==1)falhar_('CAMPO_INVALIDO:faturas');
+  if(!out.faturas.length&&!req('lacreEntrada'))out.lacres=[];
   if(req('lacreEntrada'))out.lacres=[textoChegada_(d.lacreEntrada,'lacreEntrada',100,true)];
   if(out.produtos.length){const codigos=catalogo_(ss,'Produtos_v2').map(p=>p.codigo);if(out.produtos.some(p=>!codigos.includes(p)))falhar_('PRODUTO_INVALIDO');}
   out.container=req('container')?containerChegada_(d.container):'';
@@ -150,12 +151,14 @@ function registrarChegadaCore_(dados,med) {
     const key=textoChegada_(dados.solicitacao,'solicitacao',80,true);
     if(!/^[a-zA-Z0-9-]{16,80}$/.test(key))falhar_('REQUISICAO_INVALIDA');
     const novo=validarChegada_(dados,c,ss),table=rowsChegadas_(ss);
+    if(dados.fotoLacre)falhar_('FOTO_NAO_APLICAVEL_CHEGADA');
+    validarCadastroMotoristas_(ss);
     const hash=Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,JSON.stringify(Object.assign({},novo,{fotoLacre:validarFotoLacre_(dados.fotoLacre)})),Utilities.Charset.UTF_8));
     const repetida=table.rows.find(row=>row[1]===key);
     if(repetida){
       if(repetida[3]!==c.pais.Pais||repetida[4]!==r.unidade.Codigo||repetida[10]!==c.email||repetida[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');
       med.marcar('validacao_leitura');med.gravacaoIniciada=true;
-      salvarFotoLacre_(ss,repetida,dados.fotoLacre,key);
+      atualizarMotorista_(ss,repetida);
       med.marcar('gravacao');
       atualizarViagemVisoes_(ss,c,repetida,eventosV3_(ss),!!dados.fotoLacre);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');
       return Object.assign(viagemPublica_(repetida,eventosV3_(ss)),{repetida:true});
@@ -172,7 +175,7 @@ function registrarChegadaCore_(dados,med) {
       novo.containerConfirmado?'SIM':'',novo.comodato,JSON.stringify(novo.produtos),novo.destino,novo.areaDestino,novo.statusAduaneiro,novo.observacao];
     med.marcar('validacao_leitura');med.gravacaoIniciada=true;
     table.sheet.getRange(table.sheet.getLastRow()+1,1,1,row.length).setNumberFormat('@').setValues([row.map(celulaTexto_)]);
-    salvarFotoLacre_(ss,row,dados.fotoLacre,key);
+    atualizarMotorista_(ss,row);
     med.marcar('gravacao');
     atualizarViagemVisoes_(ss,c,row,eventos,!!dados.fotoLacre);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return Object.assign(viagemPublica_(row,eventos),{repetida:false});
   } finally {lock.releaseLock();}
@@ -191,3 +194,9 @@ function buscarHistoricoChegadaBackend(codigo,filtro) {
   return rowsChegadas_(ss).rows.filter(row=>row[3]===pais&&row[4]===r.unidade.Codigo&&
     ((documento&&row[13]===documento)||(placa&&row.slice(17,20).includes(placa)))).slice(-20).reverse().map(row=>viagemPublica_(row,eventos));
 }
+
+/** Cadastro compartilhado apenas entre unidades do mesmo país. */
+const MOTORISTA_HEADERS_=['Pais','Documento','Motorista','Empresa','Telefone','AtualizadoUTC','UltimaViagem'];
+function validarCadastroMotoristas_(ss){const sh=ss.getSheetByName('Motoristas_v3');if(sh&&sh.getLastRow())conferirCabecalho_(sh,MOTORISTA_HEADERS_);}
+function atualizarMotorista_(ss,row){validarCadastroMotoristas_(ss);const sh=ss.getSheetByName('Motoristas_v3')||ss.insertSheet('Motoristas_v3');if(!sh.getLastRow()){sh.getRange(1,1,1,MOTORISTA_HEADERS_.length).setValues([MOTORISTA_HEADERS_]).setFontWeight('bold');sh.setFrozenRows(1);}const rows=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,MOTORISTA_HEADERS_.length).getDisplayValues():[];const index=rows.findIndex(x=>x[0]===row[3]&&x[1]===row[13]);if(index>=0&&rows[index][5]>=row[6])return;const values=[row[3],row[13],row[14],row[16],row[15],row[6],row[0]];sh.getRange(index>=0?index+2:sh.getLastRow()+1,1,1,values.length).setNumberFormat('@').setValues([values.map(celulaTexto_)]);}
+function buscarMotoristaBackend(codigo,documento){const r=contextoUnidade_(codigo),c=r.contexto,ss=planilhaPais_(c);const doc=documentoChegada_(documento,c.pais.Pais);validarCadastroMotoristas_(ss);const sh=ss.getSheetByName('Motoristas_v3');if(!sh||sh.getLastRow()<2)return null;const row=sh.getRange(2,1,sh.getLastRow()-1,MOTORISTA_HEADERS_.length).getDisplayValues().find(x=>x[0]===c.pais.Pais&&x[1]===doc);return row?{documento:row[1],motorista:row[2],empresa:row[3],telefone:row[4]}:null;}

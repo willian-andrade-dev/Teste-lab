@@ -20,7 +20,12 @@ PASS Tema alterna azul escuro/lua e claro/sol com nome acessível
 PASS Checklist inicia sem resposta e não conformidade torna causa obrigatória
 PASS Bloqueio local evita envio de saída divergente ou calço não devolvido
 PASS Contador agrupa radios obrigatórios e ignora opcionais
+PASS Últimas chegadas não ocupa mais a tela principal
+PASS Foto está no formulário de entrada e só é obrigatória para viagem com nota
+PASS Segunda carreta nasce apenas ao tocar em adicionar e pode ser removida
+PASS Busca pelo CPF preenche motorista e empresa sem bloquear a tela
+PASS Resposta de CPF anterior não preenche documento alterado nem campos editados
 
-22 testes de lógica do frontend em VM/DOM simulado.
+27 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

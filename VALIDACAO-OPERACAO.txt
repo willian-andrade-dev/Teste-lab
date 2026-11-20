@@ -23,8 +23,8 @@ PASS Entrada autorizada preserva decisão e permite calço emprestado
 PASS Calço emprestado precisa ser devolvido antes da saída
 PASS Saída conclui após devolver calço
 PASS Bloqueio em cadastro não consulta nem interrompe sessão ativa
-PASS Foto de lacre é persistida por viagem e consulta é autorizada por unidade
-PASS Conteúdo de foto HTML não é aceito
+PASS Foto de lacre é persistida na entrada e consulta é autorizada por unidade
+PASS Foto é recusada na chegada e não é aceita em entrada sem nota
 PASS Falha na projeção pode ser reparada sem duplicar evento
 PASS TAG é disponível somente em Imigrantes
 PASS Preparar novamente preserva fonte e eventos existentes
@@ -33,6 +33,11 @@ PASS Painel devolve chegadas recentes junto com filas
 PASS Inicialização devolve configuração e painel numa única API
 PASS Leitura do painel não consulta abas compactas de relatório
 PASS Recibo de chegada repetida preserva etapa atual já concluída
+PASS Cadastro é alimentado pela chegada e compartilha consulta entre unidades do país
+PASS Nova visita atualiza cadastro sem duplicar CPF; reenvio antigo não desfaz alteração
+PASS CPF não encontrado não recebe dados de outro motorista e cabeçalho divergente é preservado
+PASS Coleta não solicita nem persiste notas enviadas indevidamente
+PASS Cadastro e consulta de outro país não revelam CPF brasileiro
 
-35 testes locais com serviços simulados.
+40 testes locais com serviços simulados.
 Sem gravação em planilhas reais.

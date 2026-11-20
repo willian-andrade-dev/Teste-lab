@@ -101,8 +101,13 @@ function registrarMovimentoCore_(d,med){
       if(!['SIM','NAO','NA'].includes(devolucao)||(s.entrada&&s.entrada.calco==='EMPRESTADO'&&devolucao!=='SIM'))falhar_('CALCO_NAO_DEVOLVIDO');
       dados={checklist,destino:textoChegada_(d.destino,'destino',160,true),faturas:listaChegada_(d.faturas||[],'faturas',false),lacres:listaChegada_(d.lacres||[],'lacres',false),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
     }else falhar_('ACAO_INVALIDA');
+    const foto=acao==='ENTRADA'?validarFotoLacre_(d.fotoLacre):'';
+    const exigeFoto=acao==='ENTRADA'&&JSON.parse(row[23]||'[]').length>0;
+    if(exigeFoto&&!foto)falhar_('FOTO_OBRIGATORIA');
+    if((!exigeFoto&&foto)||(acao!=='ENTRADA'&&d.fotoLacre))falhar_('FOTO_NAO_APLICAVEL');
+    if(foto)dados.fotoLacreHash=hashV3_(foto);
     const hash=hashV3_({acao,dados});const repetido=eventos.find(e=>e[1]===key);
-    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');med.marcar('validacao_leitura');med.gravacaoIniciada=true;atualizarViagemVisoes_(ss,c,row,eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:true};}
+    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');med.marcar('validacao_leitura');med.gravacaoIniciada=true;if(foto)salvarFotoLacre_(ss,row,foto,key,true);atualizarViagemVisoes_(ss,c,row,eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:true};}
     if(!Number.isInteger(d.revisao)||d.revisao!==s.revisao)falhar_('REGISTRO_ATUALIZADO');
     if(['ENTRADA','RETER'].includes(acao)&&!['AGUARDANDO_ENTRADA','PENDENTE_AVALIACAO','AGUARDANDO_AUTORIZACAO','LIBERADO'].includes(s.status))falhar_('TRANSICAO_INVALIDA');
     if(acao==='RETER'&&!dados.divergencia)falhar_('CAMPO_OBRIGATORIO:divergencia');
@@ -118,11 +123,11 @@ function registrarMovimentoCore_(d,med){
     if(event[10].length>45000)falhar_('ANEXO_MUITO_GRANDE');
     med.marcar('validacao_leitura');med.gravacaoIniciada=true;
     const sh=ss.getSheetByName('Eventos_v3');sh.getRange(sh.getLastRow()+1,1,1,event.length).setNumberFormat('@').setValues([event.map(celulaTexto_)]);
-    eventos.push(event);med.marcar('gravacao');atualizarViagemVisoes_(ss,c,row,eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:false};
+    eventos.push(event);if(foto)salvarFotoLacre_(ss,row,foto,key,true);med.marcar('gravacao');atualizarViagemVisoes_(ss,c,row,eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:false};
   }finally{lock.releaseLock();}
 }
 function validarFotoLacre_(v){const s=textoChegada_(v,'fotoLacre',40000,false);if(s&&!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s))falhar_('FOTO_INVALIDA');if(s&&s.indexOf('data:image/jpeg;base64,/9j/')!==0)falhar_('FOTO_INVALIDA');return s;}
-function salvarFotoLacre_(ss,row,foto,key){
+function salvarFotoLacre_(ss,row,foto,key,entrada=false){
   const image=validarFotoLacre_(foto);if(!image)return;
   const sh=ss.getSheetByName('Fotos_v3');
   const count=sh.getLastRow()-1;
@@ -131,8 +136,10 @@ function salvarFotoLacre_(ss,row,foto,key){
   const index=meta.findIndex(x=>x[0]===row[0]);
   if(index>=0){
     const existing=meta[index];
-    if(existing[1]!==key||existing[2]!==row[4]||existing[3]!==row[3]||sh.getRange(index+2,5).getDisplayValue()!==image)falhar_('SOLICITACAO_CONFLITANTE');
-    return;
+    if(existing[2]!==row[4]||existing[3]!==row[3])falhar_('SOLICITACAO_CONFLITANTE');
+    if(existing[1]===key){if(sh.getRange(index+2,5).getDisplayValue()!==image)falhar_('SOLICITACAO_CONFLITANTE');return;}
+    if(!entrada)falhar_('SOLICITACAO_CONFLITANTE');
+    sh.getRange(index+2,1,1,5).setNumberFormat('@').setValues([[row[0],key,row[4],row[3],image]]);return;
   }
   sh.getRange(sh.getLastRow()+1,1,1,5).setNumberFormat('@').setValues([[row[0],key,row[4],row[3],image]]);
 }

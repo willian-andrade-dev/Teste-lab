@@ -1,0 +1,11 @@
+PASS Persistência local antes da liberação; envio fica em segundo plano
+PASS Outro caminhão pode entrar na fila com apenas uma gravação em voo
+PASS Impede operação concorrente para a mesma viagem
+PASS Falha preserva solicitação e libera o próximo caminhão
+PASS Confirmação remove payload e armazena métricas sem dados pessoais
+PASS Reenvio usa o mesmo identificador original
+PASS Falha no armazenamento não aceita nem perde o formulário
+PASS Reabertura recupera envio incerto e respeita pausa de sessão
+PASS Outra conta não recebe a fila do usuário anterior
+PASS Exportação de desempenho não contém viagem, documento ou assinatura
+Testes VM com armazenamento simulado; não mede Google, navegador real ou IndexedDB real.

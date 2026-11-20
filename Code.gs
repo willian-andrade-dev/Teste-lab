@@ -1,6 +1,6 @@
 /** Acesso corporativo — v0.4. Configurações existentes preservadas. */
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
+  return HtmlService.createTemplateFromFile('Index').evaluate()
     .setTitle('Colgate | Controle Logístico')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }

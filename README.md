@@ -1,3 +1,31 @@
+# Colgate v0.7 — Resposta imediata e medição de desempenho
+
+## Instalação 0.6 → 0.7
+
+Substitua Code.gs, Chegada.gs, Operacao.gs e Index.html. Crie também um arquivo **HTML chamado Fila** e copie Fila.html. Salve e publique em Deploy → Manage deployments → Edit → Version → New version → Deploy; reabra /exec. Não muda escopos, cadastros ou colunas e não precisa executar prepararOperacao novamente.
+
+## Uso
+
+Chegada, entrada e saída guardam a solicitação no IndexedDB do navegador antes de liberar o formulário. Um cartão aparece imediatamente na lista de solicitações do dispositivo, com “Salvando — não confirmado”. Os registros confirmados mantêm seu estado real até o recibo; sua próxima etapa fica bloqueada enquanto houver gravação pendente. Outros caminhões podem ser atendidos sem esperar o Google. Retenção, aprovação e recusa continuam exigindo confirmação síncrona.
+
+Há somente uma gravação em voo por página. Falhas preservam os dados e oferecem reenvio com o mesmo identificador, sem duplicar fonte/evento. Uma rejeição explícita antes de iniciar qualquer escrita, na primeira tentativa, permite corrigir os dados; assinaturas de movimentos devem ser refeitas. Após envio incerto ou recuperação da fila, mantém-se o identificador e não se permite descartar silenciosamente. A fila recupera solicitações ao reabrir no mesmo navegador/perfil/origem e pausa quando a sessão expira. Faça login novamente com a mesma conta. Uma falha exige tocar em Reenviar.
+
+Pendências pertencem à conta, país e unidade autorizados. Fotos e assinaturas necessárias ao reenvio ficam temporariamente no armazenamento local, sendo removidas depois da confirmação. Não limpe os dados do navegador, troque perfil ou atualize a implantação com solicitações pendentes. O armazenamento pode ser bloqueado pelo navegador/política corporativa: nesse caso a solicitação não é aceita e o formulário permanece preenchido. Teste primeiro no tablet utilizado na operação.
+
+## Medições e comparação futura com banco de dados
+
+O botão Exportar tempos (CSV) exporta até 500 confirmações por conta neste dispositivo: tempo até persistência local/liberação lógica da interface, espera na fila, ida e volta da chamada, tempo medido dentro do servidor e etapas (trava, acesso/estrutura, validação/leitura, gravação, relatórios e flush). “Fora do servidor” é a diferença entre ida/volta e execução medida: inclui transporte, inicialização e serialização; não representa somente rede. Tempo da interface não mede pintura física da tela. A hora oficial continua sendo gerada pelo servidor ao processar a operação, portanto uma fila longa altera a distância entre clique e horário registrado.
+
+As métricas não contêm nome, documento, placa, foto ou assinatura. Execuções também registram duração/etapas no log do Apps Script. Erros não entram na série de confirmações bem-sucedidas. A resposta imediata da tela não reduz por si só a duração da gravação Google.
+
+Para apresentar ao coordenador, execute o mesmo conjunto de chegadas/entradas/saídas nas duas versões, mesmo dispositivo/rede e volume de histórico; compare mediana e percentil 95 de confirmação, fila, servidor e tempo da interface. A versão com banco de dados será uma implementação separada. Não há aqui medições reais de latência ou promessa de gravação instantânea.
+
+Testes locais usam serviços, DOM e armazenamento simulados. IndexedDB real, permissões corporativas, comportamento visual no tablet e tempos Google precisam de validação na implantação.
+
+---
+
+# Histórico da implementação até 0.6
+
 # Colgate v0.6 — Chegada, Entrada e Saída
 
 ## Gravação incremental — versão 0.6

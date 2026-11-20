@@ -11,7 +11,9 @@ PASS Confirmação da saída move registro para concluídos sem nova leitura
 PASS Inicialização da unidade usa uma chamada para configuração e listas
 PASS Mensagens não reconstroem listas nem seus botões
 PASS Sessão expirada impede atualização sem consultar o servidor
+PASS Registro pendente bloqueia próxima etapa sem bloquear outros registros
+PASS Trocar conta esconde solicitações do usuário anterior
 
-13 testes de lógica do frontend em VM/DOM simulado.
+15 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

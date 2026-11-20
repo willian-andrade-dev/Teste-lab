@@ -1,0 +1,20 @@
+<script>
+'use strict';
+class FilaPersistente {
+ constructor(store,send,hooks={}){this.store=store;this.send=send;this.hooks=hooks;this.jobs=[];this.running=false;}
+ async start(owner,allowed){this.owner=owner;this.allowed=allowed;this.jobs=await this.store.list(owner);this.jobs.forEach(j=>{j.attempted=true;j.safeToEdit=false;if(j.state!=='FALHA')j.state='PENDENTE';});this.changed();this.pump();}
+ changed(){this.hooks.change?.();}
+ async enqueue(j){if(this.jobs.some(x=>x.key===j.key||x.resource===j.resource))throw Error('PENDING_DUPLICATE');Object.assign(j,{owner:this.owner,pk:this.owner+'::'+j.key,state:'PENDENTE',created:Date.now()});await this.store.put(j);this.jobs.push(j);this.changed();this.pump();}
+ async retry(key){const j=this.jobs.find(x=>x.key===key);if(!j||j.state!=='FALHA')return;j.state='PENDENTE';await this.store.put(j);this.changed();this.pump();}
+ async discard(key){const j=this.jobs.find(x=>x.key===key);if(!j||!j.safeToEdit||j.state!=='FALHA')throw Error('UNCONFIRMED');await this.store.remove(j);this.jobs=this.jobs.filter(x=>x!==j);this.changed();return j;}
+ async pump(){if(this.running)return;const j=this.jobs.find(x=>x.state==='PENDENTE'&&this.allowed(x));if(!j)return;this.running=true;j.state='ENVIANDO';this.changed();const start=Date.now();const timer=setTimeout(()=>{j.slow=true;this.changed();},15000);
+ try{const r=await this.send(j);if(!r.ok){const e=Error(r.erro.codigo);e.safe=r.erro.gravacaoIniciada===false&&!j.attempted;throw e;}const m={acao:j.tipo==='CHEGADA'?'CHEGADA':j.dados.acao,instante:new Date().toISOString(),interfaceMs:j.interfaceMs||0,filaMs:Math.max(0,start-j.created),idaVoltaMs:Date.now()-start,servidorMs:r.medicoes?.servidorMs??null,etapas:r.medicoes?.etapas||{}};m.foraServidorMs=m.servidorMs===null?null:Math.max(0,m.idaVoltaMs-m.servidorMs);await this.store.ack(j,m);this.jobs=this.jobs.filter(x=>x!==j);this.hooks.ack?.(j,r);}
+ catch(e){j.state='FALHA';j.error=e.message||'SEM_CONFIRMACAO';j.safeToEdit=e.safe===true;j.attempted=true;try{await this.store.put(j);}catch{}this.hooks.error?.(j);}
+ finally{clearTimeout(timer);this.running=false;this.changed();this.pump();}}
+}
+function criarArmazenamentoFila(){let opening;function db(){if(!opening)opening=new Promise((resolve,reject)=>{const r=indexedDB.open('logistica-fila-v07',1);r.onupgradeneeded=()=>{for(const name of ['jobs','metrics']){const s=r.result.createObjectStore(name,{keyPath:'pk'});s.createIndex('owner','owner');}};r.onerror=()=>reject(r.error);r.onsuccess=()=>resolve(r.result);});return opening;}
+ async function tx(names,fn){const d=await db();return new Promise((resolve,reject)=>{const t=d.transaction(names,'readwrite');t.oncomplete=()=>resolve();t.onerror=()=>reject(t.error);t.onabort=()=>reject(t.error||Error('STORAGE'));try{fn(t);}catch(e){t.abort();reject(e);}});}
+ async function list(owner,name='jobs'){const d=await db();return new Promise((resolve,reject)=>{const r=d.transaction(name).objectStore(name).index('owner').getAll(owner);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+ return {list,remove:j=>tx(['jobs'],t=>t.objectStore('jobs').delete(j.pk)),put:j=>tx(['jobs'],t=>t.objectStore('jobs').put(j)),ack:(j,m)=>tx(['jobs','metrics'],t=>{t.objectStore('jobs').delete(j.pk);const s=t.objectStore('metrics');s.put({...m,owner:j.owner,pk:j.pk});const r=s.index('owner').getAll(j.owner);r.onsuccess=()=>r.result.sort((a,b)=>a.instante.localeCompare(b.instante)).slice(0,-500).forEach(x=>s.delete(x.pk));}),metrics:owner=>list(owner,'metrics')};
+}
+</script>

@@ -1,6 +1,3 @@
-Versão 0.6
-18 testes de acesso + 33 de chegada + 35 de operação + 14 de sessão + 13 de navegação + 8 de gravação = 121 testes locais.
-Backend com serviços Google simulados; frontend com VM/DOM simulado.
-Com vinte viagens prévias, gravação atualiza somente uma linha por aba brasileira, preservando as outras.
-Movimentações não leem o conteúdo das imagens dos demais lacres.
-Sem teste visual ou medição de latência no Apps Script real.
+Versão 0.7
+137 testes locais: 18 acesso, 33 chegada, 35 operação, 14 sessão, 15 navegação, 8 gravação, 10 fila, 4 medições.
+Serviços Google, DOM e armazenamento simulados. Sem medição de latência real ou teste visual em tablet/IndexedDB real.

@@ -79,11 +79,12 @@ function dadosEntrada_(d,c,unidade){
 }
 function assinatura_(v,required){const s=textoChegada_(v,'assinatura',16000,required);if(s&&!/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(s))falhar_('ASSINATURA_INVALIDA');return s;}
 function hashV3_(obj){return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,JSON.stringify(obj),Utilities.Charset.UTF_8));}
-function registrarMovimentoBackend(d){
-  const lock=LockService.getScriptLock();lock.waitLock(30000);
+function registrarMovimentoBackend(d){return medirOperacao_(acaoMedicao_(d&&d.acao),d,registrarMovimentoCore_);}
+function registrarMovimentoCore_(d,med){
+  const lock=LockService.getScriptLock();lock.waitLock(30000);med.marcar('trava');
   try{
     if(!d||typeof d!=='object')falhar_('REQUISICAO_INVALIDA');
-    const r=contextoUnidade_(d.unidade),c=r.contexto,ss=planilhaPais_(c);validarEstruturaV3_(ss,c.pais.Pais);
+    const r=contextoUnidade_(d.unidade),c=r.contexto,ss=planilhaPais_(c);validarEstruturaV3_(ss,c.pais.Pais);med.marcar('acesso_estrutura');
     const id=textoChegada_(d.id,'id',100,true),key=textoChegada_(d.solicitacao,'solicitacao',80,true);
     if(!/^[a-zA-Z0-9-]{16,80}$/.test(key))falhar_('REQUISICAO_INVALIDA');
     const row=viagemAutorizada_(ss,c,r.unidade.Codigo,id),eventos=eventosV3_(ss),s=estadoViagem_(row,eventos);
@@ -101,7 +102,7 @@ function registrarMovimentoBackend(d){
       dados={checklist,destino:textoChegada_(d.destino,'destino',160,true),faturas:listaChegada_(d.faturas||[],'faturas',false),lacres:listaChegada_(d.lacres||[],'lacres',false),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
     }else falhar_('ACAO_INVALIDA');
     const hash=hashV3_({acao,dados});const repetido=eventos.find(e=>e[1]===key);
-    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');atualizarViagemVisoes_(ss,c,row,eventos);SpreadsheetApp.flush();return {viagem:viagemPublica_(row,eventos),repetida:true};}
+    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');med.marcar('validacao_leitura');med.gravacaoIniciada=true;atualizarViagemVisoes_(ss,c,row,eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:true};}
     if(!Number.isInteger(d.revisao)||d.revisao!==s.revisao)falhar_('REGISTRO_ATUALIZADO');
     if(['ENTRADA','RETER'].includes(acao)&&!['AGUARDANDO_ENTRADA','PENDENTE_AVALIACAO','AGUARDANDO_AUTORIZACAO','LIBERADO'].includes(s.status))falhar_('TRANSICAO_INVALIDA');
     if(acao==='RETER'&&!dados.divergencia)falhar_('CAMPO_OBRIGATORIO:divergencia');
@@ -115,8 +116,9 @@ function registrarMovimentoBackend(d){
     if(acao==='SAIDA'&&s.status!=='DENTRO_UNIDADE')falhar_('TRANSICAO_INVALIDA');
     const event=[Utilities.getUuid(),key,hash,id,r.unidade.Codigo,c.pais.Pais,acao,new Date().toISOString(),c.email,c.usuario.Nome||c.email,JSON.stringify(dados)];
     if(event[10].length>45000)falhar_('ANEXO_MUITO_GRANDE');
+    med.marcar('validacao_leitura');med.gravacaoIniciada=true;
     const sh=ss.getSheetByName('Eventos_v3');sh.getRange(sh.getLastRow()+1,1,1,event.length).setNumberFormat('@').setValues([event.map(celulaTexto_)]);
-    eventos.push(event);atualizarViagemVisoes_(ss,c,row,eventos);SpreadsheetApp.flush();return {viagem:viagemPublica_(row,eventos),repetida:false};
+    eventos.push(event);med.marcar('gravacao');atualizarViagemVisoes_(ss,c,row,eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:false};
   }finally{lock.releaseLock();}
 }
 function validarFotoLacre_(v){const s=textoChegada_(v,'fotoLacre',40000,false);if(s&&!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s))falhar_('FOTO_INVALIDA');if(s&&s.indexOf('data:image/jpeg;base64,/9j/')!==0)falhar_('FOTO_INVALIDA');return s;}
@@ -186,4 +188,24 @@ function atualizarVisoes_(ss,c){
     rows.forEach((r,j)=>{if(fotos.has(r[0]))linkFotoLacre_(sh,j+2,r);});
     if(old>rows.length)sh.getRange(rows.length+2,1,old-rows.length,schemas[nome].length).clearContent();
   });
+}
+
+/** Medições do código executado no servidor; não incluem transporte/inicialização do Apps Script. */
+function acaoMedicao_(acao){return ['ENTRADA','SAIDA','RETER','APROVAR','REJEITAR'].includes(acao)?acao:'MOVIMENTO';}
+function medirOperacao_(acao,dados,executar){
+  const inicio=Date.now();let ultimo=inicio;const etapas={};
+  const med={gravacaoIniciada:false,marcar(nome){const agora=Date.now();etapas[nome]=(etapas[nome]||0)+Math.max(0,agora-ultimo);ultimo=agora;}};
+  function finalizar(sucesso){med.marcar('finalizacao');const m={versao:'0.7',acao,servidorMs:Math.max(0,Date.now()-inicio),etapas,gravacaoIniciada:med.gravacaoIniciada};
+    console.log(JSON.stringify({evento:'DESEMPENHO_LOGISTICA',acao,sucesso,servidorMs:m.servidorMs,etapas}));return m;}
+  try{const r=executar(dados,med);return Object.assign(r,{medicoes:finalizar(true)});}
+  catch(e){e.medicoes=finalizar(false);throw e;}
+}
+/** Envelope da fila: somente confirma sucesso após a gravação real e o flush. */
+function enviarOperacaoBackend(pedido){
+  try{
+    if(!pedido||!['CHEGADA','MOVIMENTO'].includes(pedido.tipo))falhar_('REQUISICAO_INVALIDA');
+    const resultado=pedido.tipo==='CHEGADA'?registrarChegadaBackend(pedido.dados):registrarMovimentoBackend(pedido.dados);
+    return {ok:true,resultado,medicoes:resultado.medicoes};
+  }catch(e){const raw=String(e.message||'');const prefix=raw.split(':')[0];const codigo=/^[A-Z][A-Z0-9_]{1,70}$/.test(prefix)?prefix:'ERRO_SERVIDOR';
+    return {ok:false,erro:{codigo,gravacaoIniciada:e.medicoes?e.medicoes.gravacaoIniciada:true},medicoes:e.medicoes||null};}
 }

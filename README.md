@@ -1,3 +1,21 @@
+# Colgate v0.18 — Entrada após aprovação e telefone na chegada
+
+## Atualizar da v0.17
+
+1. Substitua **Index.html e Operacao.gs**.
+2. Publique uma **New version** no Deploy e reabra o aplicativo nos dispositivos.
+3. Não é necessário preparar a planilha novamente: não há novas abas, colunas ou permissões.
+
+Na entrada de um registro **LIBERADO**, a vistoria e os motivos aprovados são apresentados para consulta e enviados exatamente como foram aprovados. Não é necessário responder de novo ao checklist. A portaria ainda informa os dados da entrada física, fornece as assinaturas e, quando aplicável, a foto do lacre. A autorização permanece vinculada ao gestor que decidiu.
+
+Se algo mudou, o botão **Alterar vistoria / nova avaliação** reabre as respostas. O operador deve informar o motivo e enviar para uma nova aprovação; isso não libera uma entrada automaticamente. O servidor continua verificando o estado real e os motivos autorizados sob a trava da operação. A comparação de checklists usa o conteúdo dos itens e causas, sem depender da ordem das propriedades do JSON.
+
+A chegada brasileira agora mostra **Telefone**, obrigatório nos novos formulários, assim como já ocorria na Colômbia. Ao consultar o CPF, nome, empresa e telefone são preenchidos pelo cadastro **Motoristas_v3**. Correções digitadas enquanto a consulta está em andamento são preservadas. Cadastros históricos sem telefone precisam receber o número manualmente; o sistema não consegue recuperar números que nunca foram informados. O backend mantém a compatibilidade com solicitações antigas já salvas na fila que não continham telefone.
+
+Validação: **222 testes automatizados simulados**, incluindo o fluxo retenção → aprovação → entrada, preservação da autoria da autorização, bloqueio de motivos novos, reenvio idempotente, telefone salvo e preenchido pelo CPF e preservação de edições manuais. Não houve teste em tablet físico ou execução contra planilhas reais nesta atualização.
+
+---
+
 # Colgate v0.17 — Painel permanente de aprovações e horário das transferências
 
 ## Atualizar da v0.16

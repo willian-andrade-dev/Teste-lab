@@ -50,7 +50,10 @@ PASS Segurança acompanha pendência sem botões de aprovação e gerente pode d
 PASS Checklist não conforme é enviado como retenção, sem exigir foto de entrada física
 PASS Aprovação mostra as respostas e causas retidas para decisão do gestor
 PASS Checklist já aprovado não volta para retenção sem alteração dos motivos
+PASS Chegada do Brasil apresenta telefone obrigatório para novos cadastros
+PASS CPF preenche telefone e conserva número digitado durante a consulta
+PASS Entrada após aprovação envia a vistoria aprovada sem nova solicitação de autorização
 
-52 testes de lógica do frontend em VM/DOM simulado.
+55 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

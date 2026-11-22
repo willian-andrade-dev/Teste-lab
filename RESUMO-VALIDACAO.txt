@@ -1,6 +1,6 @@
-Colgate v0.17 — 217 testes automatizados aprovados.
-18 acesso; 33 chegada; 41 operação; 14 sessão; 52 frontend; 42 gravação; 13 fila; 4 medições.
-Testes usam serviços Google/Drive, DOM e armazenamento simulados.
-Inclui horário São Paulo independente do fuso do tablet, retenção automática a partir do checklist não conforme, visualização dos motivos para decisão, bloqueio de aprovação/rejeição pelo segurança e rejeição pelo gerente sem entrada física.
-Mantém testes de transferência idempotente, falhas parciais, estoque de carretas, isolamento de acesso e foto obrigatória.
+Colgate v0.18 — 222 testes automatizados aprovados.
+18 acesso; 33 chegada; 41 operação; 14 sessão; 55 frontend; 44 gravação; 13 fila; 4 medições.
+Serviços Google/Drive, DOM e armazenamento simulados.
+Regressão: retenção, aprovação e entrada com checklist aprovado; comparação independente da ordem do JSON; motivos novos continuam bloqueados; autoria da autorização preservada e reenvio idempotente.
+Telefone no formulário brasileiro, cadastro por país, preenchimento por CPF e preservação de alterações digitadas enquanto a consulta está em andamento.
 Não constitui teste visual em tablet nem medição de latência real no Apps Script.

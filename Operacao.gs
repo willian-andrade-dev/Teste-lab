@@ -132,7 +132,7 @@ function registrarMovimentoCore_(d,med){
       const dentro=carretasPatio_(todas,eventos,c.pais.Pais);if(row.slice(18,20).filter(Boolean).some(p=>dentro.some(x=>x.placa===p)))falhar_('CARRETA_JA_DENTRO');
       if(['PENDENTE_AVALIACAO','AGUARDANDO_AUTORIZACAO'].includes(s.status))falhar_('APROVACAO_NECESSARIA');
       if((temNaoConforme_(dados.checklist)||dados.divergencia)&&s.status!=='LIBERADO')falhar_('APROVACAO_NECESSARIA');
-      if(s.status==='LIBERADO'&&s.retencao&&JSON.stringify(dados.checklist)!==JSON.stringify(s.retencao.checklist))falhar_('NOVA_AVALIACAO_NECESSARIA');
+      if(s.status==='LIBERADO'&&s.retencao&&!checklistsEquivalentes_(dados.checklist,s.retencao.checklist))falhar_('NOVA_AVALIACAO_NECESSARIA');
       if(s.status==='LIBERADO'&&dados.divergencia&&(!s.retencao||dados.divergencia!==s.retencao.divergencia))falhar_('NOVA_AVALIACAO_NECESSARIA');
     }
     if(acao==='SAIDA'&&s.status!=='DENTRO_UNIDADE')falhar_('TRANSICAO_INVALIDA');
@@ -293,3 +293,6 @@ function obterInformacoesTransferenciaBackend(codigo,id){
  if(!event)falhar_('ACESSO_NEGADO');const dados=JSON.parse(event[10]),source=rowsChegadas_(ss).rows.find(x=>x[0]===event[3]&&x[4]===event[4]&&x[3]===row[3]);if(!source)falhar_('ACESSO_NEGADO');
  const url=urlFotoDireta_(ss,source[0],'SAIDA');return {origem:(c.origens.find(u=>u.Codigo===source[4])||{}).Nome||source[4],destino:(c.origens.find(u=>u.Codigo===row[4])||{}).Nome||row[4],motorista:row[14],documento:row[13],telefone:row[15],empresa:row[16],placas:row.slice(17,20).filter(Boolean),faturas:dados.faturas,lacres:dados.lacres,observacao:dados.observacao,saida:event[7],fuso:fusoOperacional_(c),foto:url?imagemFotoArmazenada_(url,c.pais.Pais):''};
 }
+
+/** Compara os dados da vistoria, sem depender da ordem das propriedades do JSON. */
+function checklistsEquivalentes_(a,b){if(!a||!b)return false;const keys=Object.keys(a).sort(),other=Object.keys(b).sort();return keys.length===other.length&&keys.every((k,i)=>k===other[i]&&a[k]?.estado===b[k]?.estado&&String(a[k]?.causa||'').trim()===String(b[k]?.causa||'').trim());}

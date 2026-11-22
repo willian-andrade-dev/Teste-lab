@@ -8,4 +8,7 @@ PASS Falha no armazenamento não aceita nem perde o formulário
 PASS Reabertura recupera envio incerto e respeita pausa de sessão
 PASS Outra conta não recebe a fila do usuário anterior
 PASS Exportação de desempenho não contém viagem, documento ou assinatura
+PASS Cancelamento só remove dados locais após confirmação do servidor
+PASS Operação já gravada permanece na fila para confirmar ou reparar
+PASS Reenvio é bloqueado enquanto o cancelamento aguarda resposta
 Testes VM com armazenamento simulado; não mede Google, navegador real ou IndexedDB real.

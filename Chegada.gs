@@ -151,6 +151,7 @@ function registrarChegadaCore_(dados,med) {
     validarEstruturaV3_(ss,c.pais.Pais);med.marcar('acesso_estrutura');
     const key=textoChegada_(dados.solicitacao,'solicitacao',80,true);
     if(!/^[a-zA-Z0-9-]{16,80}$/.test(key))falhar_('REQUISICAO_INVALIDA');
+    conferirNaoCancelada_(ss,key,c,r.unidade.Codigo,'CHEGADA');
     const novo=validarChegada_(dados,c,ss),table=rowsChegadas_(ss);
     if(dados.fotoLacre)falhar_('FOTO_NAO_APLICAVEL_CHEGADA');
     validarCadastroMotoristas_(ss);
@@ -166,8 +167,8 @@ function registrarChegadaCore_(dados,med) {
     }
     const placas=[novo.placa1,novo.placa2,novo.placa3].filter(Boolean);
     const eventos=eventosV3_(ss),porViagem=indiceEventos_(eventos);
-    if(table.rows.some(row=>row[3]===c.pais.Pais&&!['CONCLUIDO','RECUSADO'].includes(estadoViagem_(row,porViagem[row[0]]||[]).status)&&
-      (row[13]===novo.documento||row.slice(17,20).some(p=>p&&placas.includes(p)))))falhar_('CHEGADA_ATIVA_EXISTENTE');
+    const dentro=carretasPatio_(table.rows,eventos,c.pais.Pais);
+    if(placas.some(p=>dentro.some(x=>x.placa===p))||table.rows.some(row=>{const estado=estadoViagem_(row,porViagem[row[0]]||[]).status;return row[3]===c.pais.Pais&&!['CONCLUIDO','RECUSADO'].includes(estado)&&(row[13]===novo.documento||placas.includes(row[17])||(estado!=='DENTRO_UNIDADE'&&row.slice(18,20).some(p=>p&&placas.includes(p))));}))falhar_('CHEGADA_ATIVA_EXISTENTE');
     const agora=new Date(),fuso=fusoOperacional_(c);
     const row=[Utilities.getUuid(),key,hash,c.pais.Pais,r.unidade.Codigo,novo.status,agora.toISOString(),
       Utilities.formatDate(agora,fuso,'yyyy-MM-dd'),Utilities.formatDate(agora,fuso,'HH:mm:ss'),fuso,c.email,c.usuario.Nome||c.email,

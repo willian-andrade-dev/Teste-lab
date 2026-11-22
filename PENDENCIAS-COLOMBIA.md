@@ -5,7 +5,7 @@ Registrado em 20/11/2026, a pedido do usuário. Retomar em **21/11/2026**, depoi
 Comparação com os requisitos originais do gerente:
 
 1. Implementar a foto de saída com motorista e caminhão juntos.
-2. Revisar checklist de entrada: os cinco itens colombianos foram implementados, mas é necessário preservar/reintroduzir os itens pertinentes do checklist anterior, pois o pedido era acrescentá-los.
+2. Revisar checklist de entrada: os cinco itens colombianos foram implementados (a versão 0.15 também acrescentou três itens de EPI), mas é necessário preservar/reintroduzir os itens pertinentes do checklist anterior, pois o pedido era acrescentá-los.
 3. Completar checklist de saída conforme a referência original, excluindo System Liberation e permitindo N/A quando aplicável. Hoje existem três avaliações genéricas.
 4. Transformar as causas de não conformidade de pneus/contêiner em opções selecionáveis, incluindo Outro com descrição. Atualmente há orientação textual e texto livre.
 5. Avaliar exibição automática de observações anteriores por documento/placa; há busca manual, mas não alerta automático.

@@ -1,3 +1,43 @@
+# Colgate v0.15 — Troca de carretas, foto de saída, cancelamento e EPI
+
+## Instalar
+
+1. Feche o aplicativo nos dispositivos. Procure concluir/reenviar pendências antes de atualizar, mas **não apague os dados do navegador** se houver uma falha sem confirmação.
+2. Substitua **Chegada.gs, Operacao.gs, FotosDrive.gs, Index.html e Fila.html**.
+3. Crie dois arquivos de script: **Patio** (Patio.gs) e **Cancelamentos** (Cancelamentos.gs).
+4. Salve e execute **prepararOperacao** como ADMINISTRADOR de cada país utilizado. No Brasil, Controle_BR passa automaticamente de 33 para **36 colunas**, preservando as colunas existentes e reconstruindo as linhas a partir das fontes.
+5. Publique uma **New version** no Deploy e reabra pelo mesmo endereço, com a mesma conta/perfil do navegador. Code.gs e appsscript.json permanecem iguais; não há novo escopo.
+
+A preparação cria **Fotos_Saida_v1** e **SolicitacoesCanceladas_v1**. As novas colunas de Controle_BR são Carreta Saída, Carreta 2 Saída e Foto Lacre Saída. As carretas da chegada continuam nas colunas originais. Fontes e arquivos anteriores não são apagados.
+
+## Troca de carretas
+
+O formulário de saída oferece “Trocar as carretas na saída?”. Ao escolher Sim, dois seletores são preenchidos pelo servidor com as carretas registradas fisicamente dentro da unidade atual. Uma seleção vazia permite sair sem carreta. Não há campo livre para inventar placas. Enquanto a consulta não termina, não é possível confirmar uma troca; existe botão para atualizar a lista.
+
+O estoque é calculado pelos eventos ENTRADA/SAIDA, separado por país e unidade. A chegada na portaria não coloca a carreta dentro da planta. Uma carreta deixada pelo cavalo que sai continua no estoque. Uma carreta levada por outro cavalo sai do estoque, e uma segunda tentativa de saída com ela é recusada. A conferência final ocorre sob a mesma trava da gravação, usando os dados reais naquele momento. O cavalo não é alterado por essa opção.
+
+As entradas e saídas históricas são consideradas. Como versões anteriores não registravam trocas, o histórico antigo pressupõe saída com as carretas de chegada; trocas físicas antigas não registradas não podem ser inferidas automaticamente. Confira o estoque físico antes de adotar a nova opção em operação. A versão não cria cadastro avulso manual de carretas.
+
+## Foto do lacre de saída
+
+Ao preencher um lacre na saída, aparece a opção de foto, **opcional**. É compactada e enviada ao Drive, com referência em Fotos_Saida_v1 e link na última coluna de Controle_BR. A foto da entrada permanece em Fotos_v3/coluna Foto Lacre. Os arquivos são distintos por etapa, mesmo que a imagem seja a mesma. Remover o lacre limpa a foto que ainda estava no formulário. A busca de histórico permite abrir também a foto de saída quando existente.
+
+## Cancelar solicitação com erro
+
+No popup de sincronização, uma solicitação em FALHA oferece Cancelar solicitação. O servidor verifica conta, país, unidade e identificador usando a trava de gravação. Se nada foi gravado, registra o cancelamento e bloqueia um eventual envio atrasado com a mesma identificação; só então a fila remove os dados locais.
+
+Se a operação já consta na fonte/eventos, a interface orienta reenviar para finalizar a confirmação/reparar uma falha parcial. Cancelar a solicitação não desfaz uma entrada/saída física já registrada. Sem resposta do servidor ou sem conexão, os dados ficam preservados. Um reenvio fica bloqueado enquanto o cancelamento está sendo verificado. O registro de cancelamento fica na aba técnica para auditoria.
+
+Reenvios de entradas/retencões já gravadas na versão anterior continuam podendo confirmar o checklist histórico sem inventar respostas de EPI. Novas solicitações precisam responder os itens atuais. Uma retenção/autorização antiga pode precisar de nova avaliação antes de uma entrada com checklist atualizado.
+
+## Três itens de EPI
+
+Entrada no Brasil e na Colômbia acrescenta **colete refletivo, bota de segurança e capacete**. São três perguntas, sem opção N/A. Usam as mesmas respostas Conforme/Não conforme e exigência de causa da inspeção existente. Não conformidade segue o fluxo de retenção e autorização, sem liberação automática. O servidor também exige as respostas.
+
+**Validação:** 201 testes locais com serviços Google/Drive, DOM e armazenamento simulados. Novos cenários cobrem estoque após troca, indisponibilidade após outra saída, saída sem carreta, links de fotos separados, cancelamento com confirmação/bloqueio de envio tardio, autoria, reenvio histórico e EPI. Migração de 33 para 36 colunas e preservação de viagens também verificadas. Sem acesso a planilhas reais ou teste visual/câmera/assinaturas no tablet nesta atualização.
+
+---
+
 # Colgate v0.14 — Campos individuais de notas e lacres no Brasil
 
 **Instalar:** substitua somente **Index.html**, salve e publique uma New version no Deploy. Nenhuma alteração de planilha, manifesto, escopo ou preparação é necessária. Atualize com a fila vazia.

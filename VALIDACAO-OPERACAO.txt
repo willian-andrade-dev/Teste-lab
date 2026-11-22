@@ -1,4 +1,4 @@
-PASS Brasil tem um relatório único com as 33 colunas do ciclo completo
+PASS Brasil tem um relatório único com as 36 colunas do ciclo completo
 PASS Origem exclui a própria unidade na configuração
 PASS Servidor rejeita origem igual à unidade mesmo com payload adulterado
 PASS Brasil aceita chegada sem NF e sem lacre

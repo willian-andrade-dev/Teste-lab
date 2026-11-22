@@ -39,7 +39,10 @@ PASS Três lacres são enviados como três itens sem exigir quebras de linha
 PASS Saída carregada exibe estrela persistente e exige todos os campos adicionais
 PASS Trocar para descarregado remove todos os itens adicionais ocultos
 PASS Restaurar solicitação preserva múltiplas notas e lacres
+PASS Troca de carreta oferece somente opções retornadas para a unidade atual
+PASS Foto opcional de saída aparece com lacre e é limpa se ele for removido
+PASS Checklist apresenta exatamente três itens de EPI sem N/A
 
-41 testes de lógica do frontend em VM/DOM simulado.
+44 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

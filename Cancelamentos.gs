@@ -1,0 +1,11 @@
+const CANCELAMENTO_HEADERS_=['Solicitacao','Autor','Pais','Unidade','Tipo','Viagem','InstanteUTC'];
+function cancelamentos_(ss){const sh=ss.getSheetByName('SolicitacoesCanceladas_v1');conferirCabecalho_(sh,CANCELAMENTO_HEADERS_);return sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,7).getDisplayValues():[];}
+function conferirNaoCancelada_(ss,key,c,unidade,tipo){if(cancelamentos_(ss).some(r=>r[0]===key&&r[1]===c.email&&r[2]===c.pais.Pais&&r[3]===unidade&&r[4]===tipo))falhar_('SOLICITACAO_CANCELADA');}
+/** A mesma trava de gravação impede que um envio atrasado passe após o cancelamento. */
+function cancelarSolicitacaoBackend(p){const lock=LockService.getScriptLock();lock.waitLock(30000);try{
+ if(!p||!['CHEGADA','MOVIMENTO'].includes(p.tipo))falhar_('REQUISICAO_INVALIDA');const r=contextoUnidade_(p.unidade),c=r.contexto,ss=planilhaPais_(c),key=textoChegada_(p.solicitacao,'solicitacao',80,true);if(!/^[a-zA-Z0-9-]{16,80}$/.test(key))falhar_('REQUISICAO_INVALIDA');
+ const antiga=cancelamentos_(ss).find(x=>x[0]===key&&x[1]===c.email&&x[2]===c.pais.Pais&&x[3]===r.unidade.Codigo&&x[4]===p.tipo);if(antiga){if(antiga[1]!==c.email||antiga[2]!==c.pais.Pais||antiga[3]!==r.unidade.Codigo||antiga[4]!==p.tipo)falhar_('ACESSO_NEGADO');return {cancelada:true};}
+ const row=p.tipo==='CHEGADA'?rowsChegadas_(ss).rows.find(x=>x[1]===key):eventosV3_(ss).find(x=>x[1]===key);
+ if(row){const own=p.tipo==='CHEGADA'?row[10]===c.email&&row[3]===c.pais.Pais&&row[4]===r.unidade.Codigo:row[8]===c.email&&row[5]===c.pais.Pais&&row[4]===r.unidade.Codigo;if(!own)falhar_('ACESSO_NEGADO');return {cancelada:false,gravada:true};}
+ const sh=ss.getSheetByName('SolicitacoesCanceladas_v1');sh.getRange(sh.getLastRow()+1,1,1,7).setNumberFormat('@').setValues([[key,c.email,c.pais.Pais,r.unidade.Codigo,p.tipo,textoChegada_(p.id,'id',100,false),new Date().toISOString()]].map(r=>r.map(celulaTexto_)));SpreadsheetApp.flush();return {cancelada:true};
+ }finally{lock.releaseLock();}}

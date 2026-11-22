@@ -1,4 +1,4 @@
-Versão 0.14
-186 testes locais: 18 acesso, 33 chegada, 41 operação, 14 sessão, 41 navegação/UI, 25 gravação/migração/links, 10 fila, 4 medições.
-Google/Drive, DOM e armazenamento simulados. Sem acesso à implantação real ou teste visual no tablet.
-Novos casos: notas/lacres individuais, múltiplos itens, remoção intermediária, asterisco obrigatório após tradução, limpeza de extras ocultos e restauração de listas.
+Versão 0.15
+201 testes locais: 18 acesso, 33 chegada, 41 operação, 14 sessão, 44 navegação/UI, 34 gravação/migração/estoque/cancelamento, 13 fila, 4 medições.
+Google/Drive, DOM e armazenamento simulados. Sem acesso a planilhas reais ou teste visual no tablet.
+Novos cenários: carretas dentro da unidade, troca e permanência após saída do cavalo, disputa por placa, fotos de entrada/saída separadas, cancelamento confirmado/bloqueio de envio atrasado/autoria, compatibilidade com reenvio histórico, EPI e migração do relatório para 36 colunas.

@@ -23,8 +23,17 @@ PASS Formatação das abas auxiliares preserva dados e não altera Controle_BR
 PASS Saída descarregada dispensa destino e aceita nota/lacre raros com dependência
 PASS Reparo troca texto de disponibilidade por URL real sem alterar outras informações
 PASS Reconstrução mantém URL de foto e reparo converte imagem legada já no relatório
+PASS Troca usa estoque físico e mantém carreta deixada após saída do cavalo
+PASS Foto de saída fica separada da entrada, com links próprios e reenvio idempotente
+PASS Cancelar solicitação não gravada impede envio atrasado e é idempotente
+PASS Cancelamento recusa evento já gravado e não desfaz entrada física
+PASS EPI ausente bloqueia entrada e não conformidade exige avaliação
+PASS Preparar migra Controle_BR de 33 para 36 colunas sem perder viagens
+PASS Cancelamento confirmado bloqueia envio atrasado e repetição não duplica bloqueio
+PASS Outro usuário não cancela evento já gravado por uma conta diferente
+PASS Reenvio de entrada já gravada na versão anterior confirma sem inventar EPI nem duplicar
 
-25 testes com serviços Google simulados.
+34 testes com serviços Google simulados.
 Com vinte viagens anteriores, cada chegada/entrada/saída alterou somente uma linha em cada uma das três abas brasileiras.
 A movimentação não leu o conteúdo das imagens dos outros lacres.
 Sem medição de latência no Apps Script real.

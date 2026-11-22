@@ -21,7 +21,7 @@ function imagemFotoArmazenada_(value,pais){
   const blob=file.getBlob();if(blob.getContentType()!=='image/jpeg')falhar_('FOTO_INVALIDA');
   return 'data:image/jpeg;base64,'+Utilities.base64Encode(blob.getBytes());
 }
-function urlFotoDireta_(ss,id,etapa='ENTRADA'){const sh=ss.getSheetByName(etapa==='SAIDA'?'Fotos_Saida_v1':'Fotos_v3'),count=sh?sh.getLastRow()-1:0;if(count<1)return '';const ids=sh.getRange(2,1,count,1).getDisplayValues(),index=ids.findIndex(x=>x[0]===id);if(index<0)return '';const value=sh.getRange(index+2,5).getDisplayValue();return idFotoDrive_(value)?value:'';}
+function urlFotoDireta_(ss,id,etapa='ENTRADA'){const sh=ss.getSheetByName(folhaFoto_(etapa)),count=sh?sh.getLastRow()-1:0;if(count<1)return '';const ids=sh.getRange(2,1,count,1).getDisplayValues(),index=ids.findIndex(x=>x[0]===id);if(index<0)return '';const value=sh.getRange(index+2,5).getDisplayValue();return idFotoDrive_(value)?value:'';}
 /** Executar como ADMINISTRADOR. Converte até 20 imagens antigas por execução, sem apagar dados antes de salvar. */
 function migrarFotosParaDrive(){
   const lock=LockService.getScriptLock();lock.waitLock(30000);
@@ -32,12 +32,16 @@ function migrarFotosParaDrive(){
 }
 
 function vincularFotoDrive_(sh,linha,url){sh.getRange(linha,5).setRichTextValue(SpreadsheetApp.newRichTextValue().setText(url).setLinkUrl(url).build());}
-function gravarReferenciaFotoDrive_(sh,linha,row,key,image,etapa='ENTRADA'){const url=salvarImagemDrive_(row[3],row[0],etapa==='SAIDA'?'SAIDA-'+key:key,image);sh.getRange(linha,1,1,5).setNumberFormat('@').setValues([[row[0],key,row[4],row[3],url]]);vincularFotoDrive_(sh,linha,url);}
+function gravarReferenciaFotoDrive_(sh,linha,row,key,image,etapa='ENTRADA'){const url=salvarImagemDrive_(row[3],row[0],etapa==='ENTRADA'?key:etapa+'-'+key,image);sh.getRange(linha,1,1,5).setNumberFormat('@').setValues([[row[0],key,row[4],row[3],url]]);vincularFotoDrive_(sh,linha,url);}
 
 /** Repara fotos existentes sem reconstruir ou modificar as outras colunas do relatório. */
 function atualizarLinksFotos(){return migrarFotosParaDrive();}
 function atualizarLinksFotosPais_(ss,c){
  const report=c.pais.Pais==='BR'?ss.getSheetByName('Controle_BR'):null;let ids=[];if(report&&report.getLastRow()>1){conferirCabecalho_(report,SAIDA_BR_);ids=report.getRange(2,1,report.getLastRow()-1,2).getDisplayValues();}let n=0;
- for(const [name,etapa,col]of [['Fotos_v3','ENTRADA',16],['Fotos_Saida_v1','SAIDA',36]]){const photos=ss.getSheetByName(name),count=photos?photos.getLastRow()-1:0;if(count<1)continue;const meta=photos.getRange(2,1,count,4).getDisplayValues(),urls=new Map();meta.forEach((r,i)=>{if(r[3]!==c.pais.Pais)return;const value=photos.getRange(i+2,5).getDisplayValue();if(!idFotoDrive_(value))return;vincularFotoDrive_(photos,i+2,value);urls.set(r[0],value);n++;});if(report)ids.forEach((r,i)=>{if(urls.has(r[0])){report.getRange(i+2,col).setNumberFormat('@').setValues([[urls.get(r[0])]]);linkFotoLacre_(report,i+2,r,urls.get(r[0]),etapa);}});
+ for(const [name,etapa,col]of [['Fotos_v3','ENTRADA',16],['Fotos_Saida_v1','SAIDA',36],['Fotos_Conjunto_CO_v1','CONJUNTO',0]]){const photos=ss.getSheetByName(name),count=photos?photos.getLastRow()-1:0;if(count<1)continue;const meta=photos.getRange(2,1,count,4).getDisplayValues(),urls=new Map();meta.forEach((r,i)=>{if(r[3]!==c.pais.Pais)return;const value=photos.getRange(i+2,5).getDisplayValue();if(!idFotoDrive_(value))return;vincularFotoDrive_(photos,i+2,value);urls.set(r[0],value);n++;});if(report)ids.forEach((r,i)=>{if(urls.has(r[0])){report.getRange(i+2,col).setNumberFormat('@').setValues([[urls.get(r[0])]]);linkFotoLacre_(report,i+2,r,urls.get(r[0]),etapa);}});
  }return n;
+}
+
+function folhaFoto_(etapa){
+  return etapa==='CONJUNTO'?'Fotos_Conjunto_CO_v1':etapa==='SAIDA'?'Fotos_Saida_v1':'Fotos_v3';
 }

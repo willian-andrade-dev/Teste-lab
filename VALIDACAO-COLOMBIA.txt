@@ -1,0 +1,18 @@
+PASS Configuração CO expõe checklist versionado e fuso Bogotá sem modificar Brasil
+PASS As oito finalidades aceitam os campos próprios e reciclagem aceita pessoa livre
+PASS Pré-cadastro normaliza documento, reenvia sem duplicar e conserva histórico de atualização
+PASS Veículos são independentes dos motoristas e migração repetida preserva cadastro manual
+PASS Histórico por documento e placa tem data, origem e não cria bloqueio por observação
+PASS Cadastro e consultas recusam unidade ou país sem acesso
+PASS Checklist novo exige causas selecionadas e descrição de Outro
+PASS Aprovação preserva causas e libera entrada; alteração real é recusada
+PASS Exportação vazia exige foto de lacre na entrada mesmo sem fatura
+PASS Saída exige foto conjunta distinta e mantém links privados por finalidade
+PASS Falha no upload conjunto não conclui a saída e reenvio recupera sem duplicação
+PASS Formulário antigo não pode omitir itens novos em uma nova vistoria
+PASS Atualizar motorista conserva histórico e reenvio antigo não desfaz telefone novo
+PASS Migração repetida conserva veículo editado e histórico consultável por placa
+PASS Cadastro usa envelope da fila e cancelamento impede envio atrasado
+PASS Troca de carreta CO mantém estoque e impede levar placa já retirada
+PASS Diagnóstico informa unidade ausente sem alterar a configuração
+Serviços Google/Drive simulados. Sem acesso à planilha real.

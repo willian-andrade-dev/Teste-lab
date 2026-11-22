@@ -53,7 +53,13 @@ PASS Checklist já aprovado não volta para retenção sem alteração dos motiv
 PASS Chegada do Brasil apresenta telefone obrigatório para novos cadastros
 PASS CPF preenche telefone e conserva número digitado durante a consulta
 PASS Entrada após aprovação envia a vistoria aprovada sem nova solicitação de autorização
+PASS Colômbia mantém lacre de exportação sem fatura e usa campos repetíveis
+PASS Causas de pneus oferecem múltipla seleção e Outro obrigatório
+PASS Colômbia exige foto de lacre no contêiner vazio e foto conjunta na saída
+PASS Validação colombiana aponta telefone inválido antes da fila
+PASS Observação atrasada de outro documento é ignorada
+PASS Todos os idiomas contêm as novas chaves colombianas
 
-55 testes de lógica do frontend em VM/DOM simulado.
+61 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

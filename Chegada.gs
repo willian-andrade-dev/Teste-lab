@@ -2,7 +2,7 @@
 const CHEGADA_HEADERS_ = ['ID','Solicitacao','Resumo','Pais','Unidade','Status','InstanteUTC','DataLocal','HoraLocal','Fuso','RegistradoPor','NomeOficial','Finalidade','Documento','Motorista','Telefone','Empresa','Placa1','Placa2','Placa3','SeguridadeSocial','Infracao','OrdemCarga','Faturas','Lacres','Remitos','BodegaOrigem','Container','ContainerConfirmado','Comodato','Produtos','Destino','AreaDestino','StatusAduaneiro','Observacao'];
 const FINALIDADES_ = {
   CO: {
-    CARGA_NACIONAL:['ordemCarga'], RECICLAGEM:['faturas'],
+    CARGA_NACIONAL:['ordemCarga'], RECICLAGEM:['faturas','empresaOutra'],
     EXPORTACAO:['ordemCarga','container','lacreEntrada','comodato','produtos','destino'],
     ENTRE_BODEGAS:['remitos','origem'], DEVOLUCOES:['origem','faturas','lacres'],
     MATERIA_PRIMA:['faturas','lacres','areaDestino','produtos'],
@@ -54,7 +54,7 @@ function catalogo_(ss,nome) {
 function obterConfiguracaoChegadaBackend(codigo) {
   const r=contextoUnidade_(codigo),ss=planilhaPais_(r.contexto);
   conferirCabecalho_(ss.getSheetByName('Chegadas_v2'),CHEGADA_HEADERS_);
-  return {destinos:r.contexto.pais.Pais==='BR'?destinosBR_(r.contexto,r.unidade):[],pais:r.contexto.pais.Pais,finalidades:FINALIDADES_[r.contexto.pais.Pais],
+  return {regrasCO:r.contexto.pais.Pais==='CO'?CO_REGRAS_:null,destinos:r.contexto.pais.Pais==='BR'?destinosBR_(r.contexto,r.unidade):[],pais:r.contexto.pais.Pais,finalidades:FINALIDADES_[r.contexto.pais.Pais],
     oficial:r.contexto.usuario.Nome||r.contexto.email,
     tag:r.contexto.pais.Pais==='BR'&&/IMIGRANTES/i.test(r.unidade.Codigo+' '+r.unidade.Nome),
     origens:r.contexto.origens.filter(u=>u.Codigo!==r.unidade.Codigo).map(u=>({codigo:u.Codigo,nome:u.Nome})),
@@ -140,8 +140,8 @@ function rowsChegadas_(ss) {
   return {sheet:sh,rows:sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,CHEGADA_HEADERS_.length).getDisplayValues():[]};
 }
 function resumoChegada_(row) {
-  const timestamp=new Date(row[6]),localBR=row[3]==='BR'&&!isNaN(timestamp.getTime());
-  return {id:row[0],solicitacao:row[1],unidade:row[4],status:row[5],data:localBR?Utilities.formatDate(timestamp,'America/Sao_Paulo','yyyy-MM-dd'):row[7],hora:localBR?Utilities.formatDate(timestamp,'America/Sao_Paulo','HH:mm:ss'):row[8],oficial:row[11],finalidade:row[12],documento:row[13],motorista:row[14],empresa:row[16],placa1:row[17],placa2:row[18],observacao:row[34]};
+  const timestamp=new Date(row[6]),localBR=['BR','CO'].includes(row[3])&&!isNaN(timestamp.getTime()),fusoResumo=row[3]==='CO'?'America/Bogota':'America/Sao_Paulo';
+  return {id:row[0],solicitacao:row[1],unidade:row[4],status:row[5],data:localBR?Utilities.formatDate(timestamp,fusoResumo,'yyyy-MM-dd'):row[7],hora:localBR?Utilities.formatDate(timestamp,fusoResumo,'HH:mm:ss'):row[8],oficial:row[11],finalidade:row[12],documento:row[13],motorista:row[14],empresa:row[16],placa1:row[17],placa2:row[18],observacao:row[34]};
 }
 function registrarChegadaBackend(dados){return medirOperacao_('CHEGADA',dados,registrarChegadaCore_);}
 function registrarChegadaCore_(dados,med) {
@@ -160,7 +160,7 @@ function registrarChegadaCore_(dados,med) {
     if(repetida){
       if(repetida[3]!==c.pais.Pais||repetida[4]!==r.unidade.Codigo||repetida[10]!==c.email||repetida[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');
       med.marcar('validacao_leitura');med.gravacaoIniciada=true;
-      atualizarMotorista_(ss,repetida);
+      atualizarMotorista_(ss,repetida);registrarVeiculosChegadaColombia_(ss,repetida);
       med.marcar('gravacao');
       atualizarViagemVisoes_(ss,c,repetida,eventosV3_(ss),!!dados.fotoLacre);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');
       return Object.assign(viagemPublica_(repetida,eventosV3_(ss)),{repetida:true});
@@ -177,7 +177,7 @@ function registrarChegadaCore_(dados,med) {
       novo.containerConfirmado?'SIM':'',novo.comodato,JSON.stringify(novo.produtos),novo.destino,novo.areaDestino,novo.statusAduaneiro,novo.observacao];
     med.marcar('validacao_leitura');med.gravacaoIniciada=true;
     table.sheet.getRange(table.sheet.getLastRow()+1,1,1,row.length).setNumberFormat('@').setValues([row.map(celulaTexto_)]);
-    atualizarMotorista_(ss,row);
+    atualizarMotorista_(ss,row);registrarVeiculosChegadaColombia_(ss,row);
     med.marcar('gravacao');
     atualizarViagemVisoes_(ss,c,row,eventos,!!dados.fotoLacre);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return Object.assign(viagemPublica_(row,eventos),{repetida:false});
   } finally {lock.releaseLock();}

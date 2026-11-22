@@ -1,0 +1,352 @@
+<script>
+/** Componentes exclusivos CO, usando os serviços e formulários existentes. */
+let coPhoto='',coObservationEpoch=0,coObservationTimer;
+function inspectionCause(k,x,saved){
+  const item=saved?.causas?.[k];
+  return item?item.opcoes.map(code=>t('cause_'+code)).join(', ')+(item.outro?' — '+item.outro:''):x.causa||'';
+}
+function entryKeys(){
+  return config?.pais==='CO'?(movement?.viagem.status==='LIBERADO'&&!movement.reavaliar&&movement.viagem.retencao?.checklist?Object.keys(movement.viagem.retencao.checklist):config.regrasCO?.entrada||CHECK_CO):CHECK_BR;
+}
+function entryNeedsPhoto(v){
+  return config?.pais==='CO'?!!v.lacres?.length:!!v.faturas?.length;
+}
+function coCauses(k,row){
+  if(config.pais!=='CO'||!config.regrasCO?.causas[k])return;
+  const saved=movement.viagem.retencao?.causas?.[k],group=document.createElement('div');
+  group.id='causes-'+k;
+  group.className='cause-options';
+  const cause=$('cause-'+k);
+  for(const code of config.regrasCO.causas[k]){
+    const label=document.createElement('label');
+    label.className='choice';
+    const input=document.createElement('input');
+    input.type='checkbox';
+    input.id='co-'+k+'-'+code;
+    input.value=code;
+    input.checked=!!saved?.opcoes.includes(code);
+    const text=document.createElement('span');
+    text.dataset.t='cause_'+code;
+    label.append(input,text);
+    input.onchange=()=>syncCoCause(k);
+    group.append(label);
+  }
+  const other=field('other-'+k,{
+    max:300
+  }
+  ,group);
+  other.value=saved?.outro||'';
+  other.oninput=()=>syncCoCause(k);
+  row.append(group);
+  const radioChange=()=>{
+    const nc=document.querySelector('input[name="chk-'+k+'"]:checked')?.value==='NAO_CONFORME';
+    group.hidden=!nc;
+    cause.required=false;
+    cause.hidden=true;
+    $('field-other-'+k).hidden=!$('co-'+k+'-OUTRO').checked;
+    other.required=nc&&$('co-'+k+'-OUTRO').checked;
+  };
+  for(const state of ['CONFORME','NAO_CONFORME','NA']){
+    const el=$('chk-'+k+'-'+state);
+    if(el){
+      const old=el.onchange;
+      el.onchange=()=>{
+        old();
+        radioChange();
+      };
+    }
+  }
+  radioChange();
+}
+function syncCoCause(k){
+  const selected=config.regrasCO.causas[k].filter(code=>$('co-'+k+'-'+code)?.checked);
+  $('field-other-'+k).hidden=!selected.includes('OUTRO');
+  $('other-'+k).required=selected.includes('OUTRO');
+  $('cause-'+k).value=selected.join(', ')+(selected.includes('OUTRO')?' — '+value('other-'+k):'');
+  updateEntryDecision();
+}
+function readCoCauses(){
+  const result={};
+  for(const k of Object.keys(config.regrasCO?.causas||{})){
+    if(document.querySelector('input[name="chk-'+k+'"]:checked')?.value!=='NAO_CONFORME')continue;
+    const opcoes=config.regrasCO.causas[k].filter(code=>$('co-'+k+'-'+code)?.checked);
+    if(!opcoes.length||(opcoes.includes('OUTRO')&&!value('other-'+k))){
+      message('coCausesRequired');
+      $('causes-'+k)?.scrollIntoView({
+        block:'center'
+      });
+      return null;
+    }
+    result[k]={
+      opcoes:opcoes.sort(),outro:opcoes.includes('OUTRO')?value('other-'+k):''
+    };
+  }
+  return result;
+}
+function setupColombiaMovement(){
+  coPhoto='';
+  if(config.pais!=='CO')return;
+  const approved=approvedInspection();
+  for(const k of Object.keys(config.regrasCO?.causas||{})){
+    const root=$('causes-'+k);
+    if(root)for(const el of root.querySelectorAll('input'))el.disabled=approved;
+  }
+  if(movement.acao!=='SAIDA')return;
+  const area=document.createElement('div');
+  area.className='field wide';
+  area.id='coJointPhoto';
+  const label=document.createElement('label');
+  label.textContent=t('coJointPhoto')+' *';
+  const input=document.createElement('input');
+  input.type='file';
+  input.id='coJointFile';
+  input.accept='image/*';
+  input.setAttribute('capture','environment');
+  input.required=true;
+  const preview=document.createElement('img');
+  preview.id='coJointPreview';
+  preview.className='photo-preview';
+  preview.hidden=true;
+  const remove=actionButton('photoRemove',()=>{
+    coPhoto='';
+    input.value='';
+    preview.hidden=true;
+  });
+  input.onchange=async()=>{
+    if(!input.files?.[0])return;
+    setBusy(true);
+    try{
+      coPhoto=await compressPhoto(input.files[0]);
+      preview.src=coPhoto;
+      preview.hidden=false;
+    }
+    catch{
+      coPhoto='';
+      input.value='';
+      preview.hidden=true;
+      message('photoError');
+    }
+    finally{
+      setBusy(false);
+    }
+  };
+  const choose=actionButton('chooseFile',()=>{
+    input.removeAttribute('capture');
+    input.click();
+  });
+  area.append(label,input,choose,preview,remove);
+  $('movementFields').append(area);
+}
+function setupCoObservations(){
+  if(config.pais!=='CO')return;
+  let area=$('coObservations');
+  if(!area){
+    area=document.createElement('div');
+    area.id='coObservations';
+    area.className='notice wide';
+    area.hidden=true;
+    $('common').append(area);
+  }
+  for(const id of ['documento','placa1','placa2']){
+    const el=$(id);
+    if(el){
+      el.addEventListener('input',()=>{
+        coObservationEpoch++;
+        if($('coObservations'))$('coObservations').hidden=true;
+      });
+      el.onblur=()=>{
+        coObservationEpoch++;
+        clearTimeout(coObservationTimer);
+        coObservationTimer=setTimeout(()=>loadCoObservations(id),400);
+      };
+    }
+  }
+}
+function loadCoObservations(id){
+  if(config.pais!=='CO')return;
+  const raw=value(id),code=unit,owner=session.email,token=++coObservationEpoch;
+  const normalized=raw.replace(/[\s.\/-]/g,'').toUpperCase();
+  if(!normalized||!(id==='documento'?/^[A-Z0-9]{4,24}$/:/^[A-Z0-9]{5,10}$/).test(normalized))return;
+  rpc('observacoesColombiaBackend',[code,id==='documento'?{
+    documento:raw
+  }
+  :{
+    placa:raw
+  }
+  ],rows=>{
+    const root=$('coObservations');
+    root.replaceChildren();
+    root.hidden=!rows.length;
+    const title=document.createElement('strong');
+    title.textContent=t('coPreviousNotes');
+    root.append(title);
+    for(const x of rows){
+      const p=document.createElement('p');
+      p.textContent=[x.data,x.hora,x.origem,t(x.tipo),x.observacao,x.divergencia].filter(Boolean).join(' · ');
+      root.append(p);
+    }
+  }
+  ,{
+    background:true,valid:()=>coObservationEpoch===token&&unit===code&&session?.email===owner&&value(id)===raw
+  });
+}
+function openCoRegistry(){
+  if(busy)return;
+  let dialog=$('coRegistryDialog');
+  if(!dialog){
+    dialog=document.createElement('dialog');
+    dialog.id='coRegistryDialog';
+    document.body.append(dialog);
+  }
+  dialog.replaceChildren();
+  const title=document.createElement('h2');
+  title.textContent=t('coRegistry');
+  const fields=document.createElement('div');
+  fields.id='coRegistryFields';
+  fields.className='form-grid';
+  dialog.append(title,fields);
+  field('coEntity',{
+    required:true,options:[{
+      value:'MOTORISTA',key:'motorista'
+    }
+    ,{
+      value:'VEICULO',key:'coVehicle'
+    }
+    ]
+  }
+  ,'coRegistryFields');
+  field('coKey',{
+    required:true,max:32
+  }
+  ,'coRegistryFields');
+  field('coName',{
+    max:160
+  }
+  ,'coRegistryFields');
+  field('coCompany',{
+    max:160
+  }
+  ,'coRegistryFields');
+  field('coPhone',{
+    type:'tel',max:30
+  }
+  ,'coRegistryFields');
+  field('coType',{
+    options:['CARRO','CAMINHONETE','CAMINHAO','CARRETA','NA'].map(x=>({
+      value:x,key:x
+    }))
+  }
+  ,'coRegistryFields');
+  field('coNote',{
+    type:'textarea',max:2000,wide:true
+  }
+  ,'coRegistryFields');
+  let request=newKey(),epoch=0;
+  const update=()=>{
+    epoch++;
+    for(const id of ['coName','coCompany','coPhone']){
+      $('field-'+id).hidden=value('coEntity')!=='MOTORISTA';
+      $(id).required=value('coEntity')==='MOTORISTA';
+    }
+    $('field-coType').hidden=value('coEntity')!=='VEICULO';
+  };
+  $('coEntity').onchange=update;
+  const find=actionButton('search',()=>{
+    const entity=value('coEntity'),key=value('coKey'),token=++epoch,old=Object.fromEntries(['coName','coCompany','coPhone','coNote','coType'].map(k=>[k,value(k)]));
+    rpc(entity==='MOTORISTA'?'buscarMotoristaBackend':'buscarVeiculoColombiaBackend',[unit,key],v=>{
+      if(!v)return;
+      const mapping={
+        coName:v.motorista,coCompany:v.empresa,coPhone:v.telefone,coNote:v.observacao,coType:v.tipo
+      };
+      for(const [k,x]of Object.entries(mapping))if(x!==undefined&&value(k)===old[k])$(k).value=x;
+      if(entity==='VEICULO'){
+        const code=unit;
+        rpc('historicoVeiculoColombiaBackend',[code,key],rows=>{
+          let list=$('coVehicleHistory');
+          if(!list){
+            list=document.createElement('div');
+            list.id='coVehicleHistory';
+            list.className='notice';
+            dialog.append(list);
+          }
+          list.replaceChildren();
+          for(const x of rows){
+            const p=document.createElement('p');
+            p.textContent=[x.data,x.hora,x.origem,x.motorista,x.empresa,t(x.finalidade),t(x.status)].join(' · ');
+            list.append(p);
+          }
+        }
+        ,{
+          background:true,valid:()=>epoch===token&&unit===code&&value('coKey')===key&&value('coEntity')==='VEICULO'&&dialog.open
+        });
+      }
+    }
+    ,{
+      background:true,valid:()=>token===epoch&&value('coKey')===key&&value('coEntity')===entity&&dialog.open
+    });
+  });
+  const save=actionButton('save',async()=>{if(queuePreparing)return;
+    const d={
+      unidade:unit,solicitacao:request,entidade:value('coEntity'),chave:value('coKey'),nome:value('coEntity')==='MOTORISTA'?value('coName'):'',empresa:value('coEntity')==='MOTORISTA'?value('coCompany'):'',telefone:value('coEntity')==='MOTORISTA'?value('coPhone'):'',tipo:value('coEntity')==='VEICULO'?value('coType'):'',observacao:value('coNote')
+    };
+    const keyPattern=d.entidade==='VEICULO'?/^[A-Z0-9]{5,10}$/:/^[A-Z0-9]{4,24}$/;if(!keyPattern.test(d.chave.replace(/[\s.\/-]/g,'').toUpperCase())){coFieldError('coKey',d.entidade==='VEICULO'?'PLATE_ERROR':'DOC_ERROR');return;}if(!d.entidade||!d.chave||(d.entidade==='MOTORISTA'&&(!d.nome||!d.empresa||!/^\+?[\d\s().-]{7,30}$/.test(d.telefone)))||(d.entidade==='VEICULO'&&!d.tipo)){
+      message('invalid');
+      return;
+    }
+    if(await enqueueOperation('CADASTRO',d,{
+      motorista:d.nome||d.chave,placa1:d.entidade==='VEICULO'?d.chave:''
+    })){
+      request=newKey();
+      closeDialog('coRegistryDialog');
+      message('queued');
+    }
+  });
+  dialog.append(find,save,actionButton('cancel',()=>closeDialog('coRegistryDialog')));
+  update();
+  translate();
+  showDialog('coRegistryDialog');
+}
+function coFieldError(id,key){
+  const el=$(id);
+  if(el){
+    el.setCustomValidity(t(key));
+    el.setAttribute('aria-invalid','true');
+    el.closest('.field')?.classList.add('invalid');
+    let hint=$('co-error-'+id);
+    if(!hint){
+      hint=document.createElement('small');
+      hint.id='co-error-'+id;
+      hint.className='field-error';
+      el.closest('.field')?.append(hint);
+    }
+    hint.textContent=t(key);
+    el.oninput=()=>{
+      el.setCustomValidity('');
+      hint.textContent='';
+    };
+    el.focus();
+  }
+  message(key);
+  return false;
+}
+function validateCoArrival(){
+  if(!/^[A-Z0-9]{4,24}$/.test(value('documento').replace(/[\s.\/-]/g,'').toUpperCase()))return coFieldError('documento','DOC_ERROR');
+  if(!/^\+?[\d\s().-]{7,30}$/.test(value('telefone')))return coFieldError('telefone','coPhoneError');
+  for(const k of ['faturas','lacres','remitos']){
+    const list=lines(k);
+    if(new Set(list).size!==list.length)return coFieldError(k,'coDuplicate');
+  }
+  if(value('finalidade')==='IMPORTACAO'&&lines('faturas').length!==1)return coFieldError('faturas','coSingleInvoice');
+  if($('container')){
+    const c=value('container').replace(/\s/g,'').toUpperCase(),letters={
+      A:10,B:12,C:13,D:14,E:15,F:16,G:17,H:18,I:19,J:20,K:21,L:23,M:24,N:25,O:26,P:27,Q:28,R:29,S:30,T:31,U:32,V:34,W:35,X:36,Y:37,Z:38
+    };
+    let sum=0;
+    for(let i=0;
+    i<10;
+    i++)sum+=(i<4?letters[c[i]]:Number(c[i]))*2**i;
+    if(!/^[A-Z]{3}[UJZ]\d{7}$/.test(c)||(sum%11)%10!==Number(c[10]))return coFieldError('container','CONTAINER_ERROR');
+  }
+  return true;
+}
+</script>

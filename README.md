@@ -1,3 +1,49 @@
+# Colgate v0.19 — Operação colombiana
+
+## Instalar a partir da v0.18
+
+1. Conclua ou reenvie pendências antes de atualizar. Não limpe os dados dos navegadores.
+2. Substitua **Code.gs, Chegada.gs, Operacao.gs, FotosDrive.gs, Cancelamentos.gs, Index.html e Fila.html**.
+3. Crie o arquivo de script **Colombia.gs** e o arquivo HTML **ColombiaUI.html**. O nome no editor deve ser Colombia e ColombiaUI, respectivamente. Os demais arquivos continuam necessários, incluindo Patio.gs.
+4. Como **ADMINISTRADOR cadastrado no país CO**, execute **prepararOperacao**. Cria e formata três abas adicionais sem apagar fontes: Cadastros_CO_v1, Veiculos_CO_v1 e Fotos_Conjunto_CO_v1.
+5. Com o mesmo perfil/país, execute **migrarCadastrosColombia** para importar placas históricas ainda ausentes. É idempotente e não substitui tipos/observações editados manualmente.
+6. Execute **verificarConfiguracaoColombia**. Confira CO30, CO20, CP39, endereços, fuso e catálogos no resultado. Essa função só lê e não altera o controle.
+7. Publique uma **New version** no Deploy e reabra nos dispositivos dos dois países. Não há novo escopo Google. Não é necessário preparar ou migrar o Brasil novamente.
+
+## O que mudou
+
+Regras CO ficam em Colombia.gs, entregues ao frontend na configuração autenticada. ColombiaUI.html concentra os componentes exclusivos. Brasil conserva suas finalidades e checklists. A entrada CO-2 contém os 16 itens confirmados do checklist anterior e das adições colombianas, sem calço. Pneus e contêiner têm causas múltiplas e Outro obrigatório. A vistoria aprovada é preservada com a versão e causas, independentemente do idioma.
+
+Pré-cadastro no botão **Cadastros de motoristas e veículos**, na chegada. Selecione a entidade, informe documento/placa e use Consultar para carregar os dados antes de editar. O histórico de veículos aparece após a consulta por placa. Salvar usa a mesma fila persistente; somente a confirmação do servidor significa cadastro gravado. Documento e placa não são vinculados permanentemente. O histórico append dos comandos fica em Cadastros_CO_v1. Observações de viagens anteriores aparecem automaticamente ao sair dos campos documento/placa, dentro das unidades autorizadas; informação histórica não bloqueia uma viagem nova.
+
+As oito finalidades usam os campos próprios. Reciclagem e Outra aceitam empresa/pessoa livre. Notas, remitos e lacres usam campos individuais com botões. Exportação vazia admite lacre sem fatura e exige foto do lacre na entrada. A saída CO exige destino, foto conjunta do motorista/caminhão e, quando há lacre de saída, uma foto própria do lacre. Carga declarada carregada exige notas/lacres; sem carga os documentos podem ficar vazios. Fotos são arquivos distintos no Drive, com links privados nas abas de fotos. O usuário do link precisa ter acesso ao arquivo no Drive; não foi criado compartilhamento público. O aplicativo mantém a visualização autenticada por viagem e unidade.
+
+Em novas movimentações CO, fotos são persistidas antes do evento que efetiva entrada/saída. Se houver falha, o evento não conclui a movimentação; reenvios reaproveitam os arquivos já criados. Checklist, eventos e cadastros seguem idempotência e proteção contra conflitos. Só a confirmação real autoriza considerar a gravação concluída.
+
+Bogotá é o fuso operacional CO, independentemente do tablet. Espanhol é o padrão sem preferência; preferência por conta e idioma do usuário são respeitados. Modos claro/escuro e painel permanente de aprovações permanecem.
+
+## Dependências externas e matriz
+
+Veja [PENDENCIAS-COLOMBIA.md](PENDENCIAS-COLOMBIA.md). O formulário completo original de saída não foi fornecido: ficaram os três itens confirmados, versionados, sem System Liberation. Não foi afirmado atendimento integral a um formulário desconhecido. Unidades, endereços e catálogos precisam de conferência na planilha real.
+
+## Validação
+
+**245 testes automatizados simulados**: 18 acesso, 33 chegada, 41 operação, 14 sessão, 61 frontend, 44 gravação, 17 específicos CO, 13 fila e 4 medições. Serviços Google/Drive e DOM são simulados. Não houve autenticação Colgate nem execução contra planilhas reais. A tentativa de validação com Playwright constatou ausência do executável do navegador; não constitui teste visual.
+
+Execute: `for f in testes/*.cjs; do node "$f" || exit 1; done`
+
+## Roteiro curto na Colômbia
+
+1. Conferir diagnóstico e catálogos. Validar login CO sem acesso BR e restrição por unidade.
+2. Pré-cadastrar motorista e veículo. Consultar documento na chegada, verificar telefone, editar e consultar novamente. Verificar histórico de placa.
+3. Registrar cada finalidade; testar várias notas/lacres/remitos e importação com duas faturas recusada no formulário.
+4. Registrar exportação vazia com lacre sem fatura: a entrada exige foto do lacre e duas assinaturas.
+5. Marcar pneu/contêiner não conforme, escolher causas e Outro. Confirmar retenção sem entrada. Segurança não aprova; gestor aprova ou rejeita com motivo. Conferir entrada após aprovação e nova avaliação após alteração.
+6. Na saída, conferir destino, placas físicas, checklist, foto conjunta e foto separada do lacre quando aplicável. Simular falha de conexão e reenvio; não liberar veículo enquanto houver envio pendente.
+7. Abrir os links do Drive com as contas autorizadas; conferir tablet em retrato/paisagem, idiomas e temas. Repetir um fluxo brasileiro como regressão operacional.
+
+---
+
 # Colgate v0.18 — Entrada após aprovação e telefone na chegada
 
 ## Atualizar da v0.17

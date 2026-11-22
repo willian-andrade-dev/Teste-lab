@@ -11,7 +11,7 @@ const CHECK_NA_=['interior','cobertura','outros','container','compuertas','carga
 const CHECK_SAIDA_=['veiculo','carga','lacres'];
 const ESTADOS_TEXTO_={AGUARDANDO_ENTRADA:'Aguardando entrada — fora da planta',PENDENTE_AVALIACAO:'Pendente de avaliação — fora da planta',AGUARDANDO_AUTORIZACAO:'Aguardando autorização — fora da planta',LIBERADO:'Liberado — aguardando entrada',DENTRO_UNIDADE:'Dentro da planta',CONCLUIDO:'Concluído',RECUSADO:'Recusado — fora da planta'};
 const FIN_BR_={COLETA:'Coleta',DEVOLUCAO:'Devolução',TRANSFERENCIA:'Transferência',MOV_PALLET:'Movimentação de pallet',BR14:'BR14 (FTA) - Galpão E'};
-function schemasV3_(pais){const s={Eventos_v3:EVENTO_HEADERS_,Fotos_v3:FOTO_HEADERS_,Fotos_Saida_v1:FOTO_HEADERS_,SolicitacoesCanceladas_v1:CANCELAMENTO_HEADERS_};if(pais==='BR')Object.assign(s,{Controle_BR:SAIDA_BR_});return s;}
+function schemasV3_(pais){const s={Eventos_v3:EVENTO_HEADERS_,Fotos_v3:FOTO_HEADERS_,Fotos_Saida_v1:FOTO_HEADERS_,SolicitacoesCanceladas_v1:CANCELAMENTO_HEADERS_};if(pais==='CO')Object.assign(s,schemasColombia_());if(pais==='BR')Object.assign(s,{Controle_BR:SAIDA_BR_});return s;}
 function validarEstruturaV3_(ss,pais){const schemas=schemasV3_(pais);Object.keys(schemas).forEach(n=>conferirCabecalho_(ss.getSheetByName(n),schemas[n]));}
 function prepararOperacao(){
   prepararOperacaoBase_();
@@ -49,7 +49,7 @@ function estadoViagem_(row,eventos){
 function minutos_(inicio,fim){if(!inicio||!fim)return '';const n=Math.floor((new Date(fim).getTime()-new Date(inicio).getTime())/60000);if(!isFinite(n)||n<0)falhar_('HORARIO_INVALIDO');return n;}
 function duracao_(n){return n===''?'':Math.floor(n/60)+'h '+String(n%60).padStart(2,'0')+'m';}
 function entradaPublica_(d){if(!d)return null;const v=Object.assign({},d);delete v.assinaturas;return v;}
-function viagemPublica_(row,eventos){const s=estadoViagem_(row,eventos);return Object.assign(resumoChegada_(row),{placa3:row[19],temFotoLacreSaida:!!(s.saida&&s.saida.fotoLacreHash),temFotoLacre:!!(s.entrada&&s.entrada.fotoLacreHash),faturas:JSON.parse(row[23]||'[]'),lacres:JSON.parse(row[24]||'[]'),status:s.status,revisao:s.revisao,entrada:entradaPublica_(s.entrada),retencao:entradaPublica_(s.retencao),divergencia:s.divergencia,autorizadoPor:s.autorizadoPor,entradaUTC:s.entradaUTC,saidaUTC:s.saidaUTC,retencaoMin:minutos_(row[6],s.entradaUTC),permanenciaMin:minutos_(s.entradaUTC,s.saidaUTC)});}
+function viagemPublica_(row,eventos){const s=estadoViagem_(row,eventos);return Object.assign(resumoChegada_(row),{placa3:row[19],temFotoConjunto:!!(s.saida&&s.saida.fotoConjuntoHash),temFotoLacreSaida:!!(s.saida&&s.saida.fotoLacreHash),temFotoLacre:!!(s.entrada&&s.entrada.fotoLacreHash),faturas:JSON.parse(row[23]||'[]'),lacres:JSON.parse(row[24]||'[]'),status:s.status,revisao:s.revisao,entrada:entradaPublica_(s.entrada),retencao:entradaPublica_(s.retencao),divergencia:s.divergencia,autorizadoPor:s.autorizadoPor,entradaUTC:s.entradaUTC,saidaUTC:s.saidaUTC,retencaoMin:minutos_(row[6],s.entradaUTC),permanenciaMin:minutos_(s.entradaUTC,s.saidaUTC)});}
 function viagemAutorizada_(ss,c,unit,id){
   const found=rowsChegadas_(ss).rows.filter(r=>r[0]===id);
   if(found.length!==1||found[0][3]!==c.pais.Pais||found[0][4]!==unit)falhar_('ACESSO_NEGADO');return found[0];
@@ -70,19 +70,19 @@ function obterPainelOperacaoBackend(codigo){
 function obterInicializacaoUnidadeBackend(codigo){
   return {config:obterConfiguracaoChegadaBackend(codigo),painel:obterPainelOperacaoBackend(codigo)};
 }
-function validarChecklist_(v,keys){
+function validarChecklist_(v,keys,permitirNA=CHECK_NA_){
   if(!v||typeof v!=='object'||Array.isArray(v)||Object.keys(v).some(k=>!keys.includes(k)))falhar_('CHECKLIST_INVALIDO');
-  const out={};keys.forEach(k=>{const x=v[k];if(!x||!['CONFORME','NAO_CONFORME','NA'].includes(x.estado)||(x.estado==='NA'&&!CHECK_NA_.includes(k)))falhar_('CHECKLIST_INCOMPLETO');const causa=textoChegada_(x.causa,k,300,x.estado==='NAO_CONFORME');out[k]={estado:x.estado,causa:x.estado==='NAO_CONFORME'?causa:''};});return out;
+  const out={};keys.forEach(k=>{const x=v[k];if(!x||!['CONFORME','NAO_CONFORME','NA'].includes(x.estado)||(x.estado==='NA'&&!permitirNA.includes(k)))falhar_('CHECKLIST_INCOMPLETO');const causa=textoChegada_(x.causa,k,300,x.estado==='NAO_CONFORME');out[k]={estado:x.estado,causa:x.estado==='NAO_CONFORME'?causa:''};});return out;
 }
 function temNaoConforme_(chk){return Object.keys(chk).some(k=>chk[k].estado==='NAO_CONFORME');}
 function dadosEntrada_(d,c,unidade,keysLegadas=null){
-  const checklist=validarChecklist_(d.checklist,keysLegadas||(c.pais.Pais==='BR'?CHECK_BR_:CHECK_CO_));
+  const versao=c.pais.Pais==='CO'&&d.versaoChecklist==='CO-2',permitirNA=c.pais.Pais==='CO'?CO_REGRAS_.na:CHECK_NA_;const checklist=validarChecklist_(d.checklist,keysLegadas||(c.pais.Pais==='BR'?CHECK_BR_:versao?CO_REGRAS_.entrada:CHECK_CO_),permitirNA);
   const imigrantes=c.pais.Pais==='BR'&&/IMIGRANTES/i.test(unidade.Codigo+' '+unidade.Nome);
   const tag=textoChegada_(d.tag,'tag',60,false);if(tag&&!imigrantes)falhar_('TAG_NAO_APLICAVEL');
   const calco=c.pais.Pais==='BR'?textoChegada_(d.calco,'calco',20,true):'NA';if(!['PROPRIO','EMPRESTADO','NA'].includes(calco))falhar_('CAMPO_INVALIDO:calco');
   const divergencia=textoChegada_(d.divergencia,'divergencia',2000,temNaoConforme_(checklist));
   const assinaturas={motorista:assinatura_(d.assinaturaMotorista,true),guarda:assinatura_(d.assinaturaGuarda,true)};
-  return {checklist,tag,calco,divergencia,assinaturas};
+  return Object.assign({checklist,tag,calco,divergencia,assinaturas},versao?{versaoChecklist:'CO-2',causas:validarCausasColombia_(d,checklist)}:{});
 }
 function assinatura_(v,required){const s=textoChegada_(v,'assinatura',16000,required);if(s&&!/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(s))falhar_('ASSINATURA_INVALIDA');return s;}
 function hashV3_(obj){return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,JSON.stringify(obj),Utilities.Charset.UTF_8));}
@@ -98,7 +98,8 @@ function registrarMovimentoCore_(d,med){
     const row=viagemAutorizada_(ss,c,r.unidade.Codigo,id),eventos=eventosV3_(ss),s=estadoViagem_(row,eventos);
     const todas=rowsChegadas_(ss).rows;
     const acao=textoChegada_(d.acao,'acao',15,true),anterior=eventos.find(e=>e[1]===key);const dadosAnteriores=anterior?JSON.parse(anterior[10]):null;let dados;
-    const keysLegadas=anterior&&anterior[8]===c.email&&['ENTRADA','RETER'].includes(acao)&&dadosAnteriores.checklist?Object.keys(dadosAnteriores.checklist):null;
+    if(c.pais.Pais==='CO'&&['ENTRADA','RETER'].includes(acao)&&!anterior&&d.versaoChecklist!=='CO-2'&&!(acao==='ENTRADA'&&s.status==='LIBERADO'&&s.retencao))falhar_('CHECKLIST_ATUALIZADO');
+    const keysLegadas=anterior&&anterior[8]===c.email&&['ENTRADA','RETER'].includes(acao)&&dadosAnteriores.checklist?Object.keys(dadosAnteriores.checklist):(c.pais.Pais==='CO'&&acao==='ENTRADA'&&s.status==='LIBERADO'&&d.versaoChecklist!=='CO-2'&&s.retencao?.checklist?Object.keys(s.retencao.checklist):null);
     if(['ENTRADA','RETER'].includes(acao))dados=dadosEntrada_(d,c,r.unidade,keysLegadas);
     else if(['APROVAR','REJEITAR'].includes(acao)){
       if(!['GERENTE','ADMINISTRADOR'].includes(c.usuario.Perfil))falhar_('ACESSO_NEGADO');
@@ -111,18 +112,21 @@ function registrarMovimentoCore_(d,med){
       if(temNaoConforme_(checklist))falhar_('SAIDA_DIVERGENTE');
       const devolucao=s.entrada&&s.entrada.calco==='EMPRESTADO'?textoChegada_(d.devolucaoCalco,'devolucaoCalco',3,true):'NA';
       if(!['SIM','NAO','NA'].includes(devolucao)||(s.entrada&&s.entrada.calco==='EMPRESTADO'&&devolucao!=='SIM'))falhar_('CALCO_NAO_DEVOLVIDO');
-      dados={checklist,carregado,destino:carregado==='SIM'?textoChegada_(d.destino,'destino',160,true):'',faturas:listaChegada_(d.faturas||[],'faturas',carregado==='SIM'),lacres:listaChegada_(d.lacres||[],'lacres',carregado==='SIM'),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
-      if(carregado==='NAO'&&dados.lacres.length&&!dados.faturas.length)falhar_('CAMPO_OBRIGATORIO:faturas');
+      dados={checklist,carregado,destino:(carregado==='SIM'||c.pais.Pais==='CO')?textoChegada_(d.destino,'destino',160,true):'',faturas:listaChegada_(d.faturas||[],'faturas',carregado==='SIM'),lacres:listaChegada_(d.lacres||[],'lacres',carregado==='SIM'),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
+      if(c.pais.Pais==='BR'&&carregado==='NAO'&&dados.lacres.length&&!dados.faturas.length)falhar_('CAMPO_OBRIGATORIO:faturas');
     }else falhar_('ACAO_INVALIDA');
+    if(acao==='SAIDA'&&c.pais.Pais==='CO'&&(!anterior||dadosAnteriores.versaoChecklistSaida))dados.versaoChecklistSaida='CO-SAIDA-CONFIRMADO-1';
     if(acao==='SAIDA'&&c.pais.Pais==='BR'&&d.destinoCodigo){const destino=validarDestinoBR_(c,r.unidade,d,anterior);dados.destino=destino.nome;dados.destinoCodigo=destino.codigo;}
     if(acao==='SAIDA'&&(!anterior||Object.prototype.hasOwnProperty.call(dadosAnteriores,'placasCarretasSaida')))dados.placasCarretasSaida=d.trocarCarretas==='SIM'?(Array.isArray(d.placasCarretasSaida)?d.placasCarretasSaida.map(placaPatio_):[]):row.slice(18,20).filter(Boolean);
+    const fotoConjunto=validarFotoLacre_(d.fotoConjunto);if(fotoConjunto&&(c.pais.Pais!=='CO'||acao!=='SAIDA'))falhar_('FOTO_NAO_APLICAVEL');if(c.pais.Pais==='CO'&&acao==='SAIDA'&&(!anterior||dadosAnteriores.fotoConjuntoHash)&&!fotoConjunto)falhar_('FOTO_CONJUNTO_OBRIGATORIA');if(fotoConjunto)dados.fotoConjuntoHash=hashV3_(fotoConjunto);
     const foto=['ENTRADA','SAIDA'].includes(acao)?validarFotoLacre_(d.fotoLacre):'';
-    const exigeFoto=(acao==='ENTRADA'&&JSON.parse(row[23]||'[]').length>0)||(acao==='SAIDA'&&dados.lacres.length>0&&(!anterior||!!dadosAnteriores.fotoLacreHash));
+    const exigeFoto=(acao==='ENTRADA'&&(anterior?!!dadosAnteriores.fotoLacreHash:(c.pais.Pais==='CO'?JSON.parse(row[24]||'[]').length>0:JSON.parse(row[23]||'[]').length>0)))||(acao==='SAIDA'&&dados.lacres.length>0&&(!anterior||!!dadosAnteriores.fotoLacreHash));
     if(exigeFoto&&!foto)falhar_('FOTO_OBRIGATORIA');
     if((acao==='ENTRADA'&&!exigeFoto&&foto)||(acao==='SAIDA'&&foto&&!dados.lacres.length)||(!['ENTRADA','SAIDA'].includes(acao)&&d.fotoLacre))falhar_('FOTO_NAO_APLICAVEL');
     if(foto)dados.fotoLacreHash=hashV3_(foto);
+
     const hash=hashV3_({acao,dados});const repetido=eventos.find(e=>e[1]===key);
-    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');med.marcar('validacao_leitura');med.gravacaoIniciada=true;if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:true};}
+    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');med.marcar('validacao_leitura');med.gravacaoIniciada=true;if(fotoConjunto)salvarFotoLacre_(ss,row,fotoConjunto,key,true,'CONJUNTO');if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:true};}
     if(!Number.isInteger(d.revisao)||d.revisao!==s.revisao)falhar_('REGISTRO_ATUALIZADO');
     if(['ENTRADA','RETER'].includes(acao)&&!['AGUARDANDO_ENTRADA','PENDENTE_AVALIACAO','AGUARDANDO_AUTORIZACAO','LIBERADO'].includes(s.status))falhar_('TRANSICAO_INVALIDA');
     if(acao==='RETER'&&!dados.divergencia)falhar_('CAMPO_OBRIGATORIO:divergencia');
@@ -133,6 +137,7 @@ function registrarMovimentoCore_(d,med){
       if(['PENDENTE_AVALIACAO','AGUARDANDO_AUTORIZACAO'].includes(s.status))falhar_('APROVACAO_NECESSARIA');
       if((temNaoConforme_(dados.checklist)||dados.divergencia)&&s.status!=='LIBERADO')falhar_('APROVACAO_NECESSARIA');
       if(s.status==='LIBERADO'&&s.retencao&&!checklistsEquivalentes_(dados.checklist,s.retencao.checklist))falhar_('NOVA_AVALIACAO_NECESSARIA');
+      if(s.status==='LIBERADO'&&s.retencao?.causas&&!causasEquivalentesColombia_(dados.causas,s.retencao.causas))falhar_('NOVA_AVALIACAO_NECESSARIA');
       if(s.status==='LIBERADO'&&dados.divergencia&&(!s.retencao||dados.divergencia!==s.retencao.divergencia))falhar_('NOVA_AVALIACAO_NECESSARIA');
     }
     if(acao==='SAIDA'&&s.status!=='DENTRO_UNIDADE')falhar_('TRANSICAO_INVALIDA');
@@ -140,14 +145,15 @@ function registrarMovimentoCore_(d,med){
     const event=[Utilities.getUuid(),key,hash,id,r.unidade.Codigo,c.pais.Pais,acao,new Date().toISOString(),c.email,c.usuario.Nome||c.email,JSON.stringify(dados)];
     if(event[10].length>45000)falhar_('ANEXO_MUITO_GRANDE');
     med.marcar('validacao_leitura');med.gravacaoIniciada=true;
+    if(c.pais.Pais==='CO'){if(fotoConjunto)salvarFotoLacre_(ss,row,fotoConjunto,key,true,'CONJUNTO');if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');}
     const sh=ss.getSheetByName('Eventos_v3');sh.getRange(sh.getLastRow()+1,1,1,event.length).setNumberFormat('@').setValues([event.map(celulaTexto_)]);
-    eventos.push(event);if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');med.marcar('gravacao');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:false};
+    eventos.push(event);if(c.pais.Pais!=='CO'&&fotoConjunto)salvarFotoLacre_(ss,row,fotoConjunto,key,true,'CONJUNTO');if(c.pais.Pais!=='CO'&&foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');med.marcar('gravacao');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:false};
   }finally{lock.releaseLock();}
 }
 function validarFotoLacre_(v){const s=textoChegada_(v,'fotoLacre',40000,false);if(s&&!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s))falhar_('FOTO_INVALIDA');if(s&&s.indexOf('data:image/jpeg;base64,/9j/')!==0)falhar_('FOTO_INVALIDA');return s;}
 function salvarFotoLacre_(ss,row,foto,key,entrada=false,etapa='ENTRADA'){
   const image=validarFotoLacre_(foto);if(!image)return;
-  const sh=ss.getSheetByName(etapa==='SAIDA'?'Fotos_Saida_v1':'Fotos_v3');
+  const sh=ss.getSheetByName(folhaFoto_(etapa));
   const count=sh.getLastRow()-1;
   // Procura só os metadados; não transfere as imagens de todas as viagens.
   const meta=count>0?sh.getRange(2,1,count,4).getDisplayValues():[];
@@ -161,7 +167,7 @@ function salvarFotoLacre_(ss,row,foto,key,entrada=false,etapa='ENTRADA'){
   }
   gravarReferenciaFotoDrive_(sh,sh.getLastRow()+1,row,key,image,etapa);
 }
-function obterFotoLacreBackend(codigo,id,etapa='ENTRADA'){if(!['ENTRADA','SAIDA'].includes(etapa))falhar_('FOTO_INVALIDA');const r=contextoUnidade_(codigo),ss=planilhaPais_(r.contexto);viagemAutorizada_(ss,r.contexto,codigo,textoChegada_(id,'id',100,true));const sh=ss.getSheetByName(etapa==='SAIDA'?'Fotos_Saida_v1':'Fotos_v3');conferirCabecalho_(sh,FOTO_HEADERS_);if(sh.getLastRow()<2)return '';const row=sh.getRange(2,1,sh.getLastRow()-1,5).getDisplayValues().find(x=>x[0]===id&&x[2]===codigo&&x[3]===r.contexto.pais.Pais);return row?imagemFotoArmazenada_(row[4],r.contexto.pais.Pais):'';}
+function obterFotoLacreBackend(codigo,id,etapa='ENTRADA'){if(!['ENTRADA','SAIDA','CONJUNTO'].includes(etapa))falhar_('FOTO_INVALIDA');const r=contextoUnidade_(codigo),ss=planilhaPais_(r.contexto);viagemAutorizada_(ss,r.contexto,codigo,textoChegada_(id,'id',100,true));if(etapa==='CONJUNTO'&&r.contexto.pais.Pais!=='CO')falhar_('ACESSO_NEGADO');const sh=ss.getSheetByName(folhaFoto_(etapa));conferirCabecalho_(sh,FOTO_HEADERS_);if(sh.getLastRow()<2)return '';const rows=sh.getRange(2,1,sh.getLastRow()-1,4).getDisplayValues(),idx=rows.findIndex(x=>x[0]===id&&x[2]===codigo&&x[3]===r.contexto.pais.Pais);return idx>=0?imagemFotoArmazenada_(sh.getRange(idx+2,5).getDisplayValue(),r.contexto.pais.Pais):'';}
 function checklistTexto_(chk){if(!chk)return '';const labels={mecanica:'Condição mecânica',fluidos:'Ausência de vazamentos',pneus:'Pneus',estrutura:'Estrutura',luzes:'Luzes',espelhos:'Espelhos',interior:'Interior da carreta',cobertura:'Travessas/grades/lona',outros:'Outras condições',container:'Contêiner',reserva:'Pneu reserva',compuertas:'Portas/ancoragens/soldas',extintor:'Extintor',epi_colete:'Colete refletivo',epi_bota:'Bota de segurança',epi_capacete:'Capacete',veiculo:'Veículo',carga:'Carga',lacres:'Lacres'};const estados={CONFORME:'Conforme',NAO_CONFORME:'Não conforme',NA:'N/A'};return Object.keys(chk).map(k=>(labels[k]||k)+': '+(estados[chk[k].estado]||chk[k].estado)+(chk[k].causa?' ('+chk[k].causa+')':'')).join(' | ');}
 /** Índice em memória: evita percorrer o histórico inteiro para cada viagem. */
 function indiceEventos_(eventos){const index=Object.create(null);eventos.forEach(e=>(index[e[3]]||(index[e[3]]=[])).push(e));return index;}
@@ -238,8 +244,8 @@ function medirOperacao_(acao,dados,executar){
 /** Envelope da fila: somente confirma sucesso após a gravação real e o flush. */
 function enviarOperacaoBackend(pedido){
   try{
-    if(!pedido||!['CHEGADA','MOVIMENTO'].includes(pedido.tipo))falhar_('REQUISICAO_INVALIDA');
-    const resultado=pedido.tipo==='CHEGADA'?registrarChegadaBackend(pedido.dados):registrarMovimentoBackend(pedido.dados);
+    if(!pedido||!['CHEGADA','MOVIMENTO','CADASTRO'].includes(pedido.tipo))falhar_('REQUISICAO_INVALIDA');
+    const resultado=pedido.tipo==='CADASTRO'?salvarCadastroColombiaBackend(pedido.dados):pedido.tipo==='CHEGADA'?registrarChegadaBackend(pedido.dados):registrarMovimentoBackend(pedido.dados);
     return {ok:true,resultado,medicoes:resultado.medicoes};
   }catch(e){const raw=String(e.message||'');const prefix=raw.split(':')[0];const codigo=/^[A-Z][A-Z0-9_]{1,70}$/.test(prefix)?prefix:'ERRO_SERVIDOR';
     return {ok:false,erro:{codigo,gravacaoIniciada:e.medicoes?e.medicoes.gravacaoIniciada:true},medicoes:e.medicoes||null};}
@@ -250,7 +256,7 @@ function garantirTamanhoControle_(sh,linhas,colunas){const atuais=sh.getMaxRows(
 /** Abas auxiliares dos dois países; Controle_BR mantém sua formatação própria. */
 function formatarAbasApoio_(ss,pais){
   const definitions={Chegadas_v2:{headers:CHEGADA_HEADERS_,color:'#b91c2b'},Motoristas_v3:{headers:MOTORISTA_HEADERS_,color:'#175a9c'},Eventos_v3:{headers:EVENTO_HEADERS_,color:'#475569'},Fotos_v3:{headers:FOTO_HEADERS_,color:'#6d3991'},Fotos_Saida_v1:{headers:FOTO_HEADERS_,color:'#6d3991'},SolicitacoesCanceladas_v1:{headers:CANCELAMENTO_HEADERS_,color:'#475569'},Produtos_v2:{headers:CATALOGOS_.Produtos_v2,color:'#236b4a'},Transportadoras_v2:{headers:CATALOGOS_.Transportadoras_v2,color:'#176c80'}};
-  Object.keys(definitions).forEach(name=>{const sh=ss.getSheetByName(name);if(!sh)return;const d=definitions[name];conferirCabecalho_(sh,d.headers);const count=Math.max(2,sh.getLastRow()),cols=d.headers.length;garantirTamanhoControle_(sh,count,cols);const gridRows=Math.max(count,sh.getMaxRows()),range=sh.getRange(1,1,gridRows,cols);sh.getBandings().forEach(b=>b.remove());range.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);range.setFontFamily('Arial').setFontSize(10).setVerticalAlignment('middle').setWrap(true);sh.setFrozenRows(1);sh.setFrozenColumns(Math.min(2,cols));sh.setColumnWidths(1,cols,180);sh.setRowHeight(1,58);sh.getRange(1,1,1,cols).setBackground(d.color).setFontColor('#ffffff').setFontWeight('bold');if(sh.getFilter())sh.getFilter().remove();range.createFilter();if(count>1){sh.setRowHeights(2,gridRows-1,54);}
+  if(pais==='CO')for(const [name,headers]of Object.entries(schemasColombia_()))definitions[name]={headers,color:'#175a9c'};Object.keys(definitions).forEach(name=>{const sh=ss.getSheetByName(name);if(!sh)return;const d=definitions[name];conferirCabecalho_(sh,d.headers);const count=Math.max(2,sh.getLastRow()),cols=d.headers.length;garantirTamanhoControle_(sh,count,cols);const gridRows=Math.max(count,sh.getMaxRows()),range=sh.getRange(1,1,gridRows,cols);sh.getBandings().forEach(b=>b.remove());range.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);range.setFontFamily('Arial').setFontSize(10).setVerticalAlignment('middle').setWrap(true);sh.setFrozenRows(1);sh.setFrozenColumns(Math.min(2,cols));sh.setColumnWidths(1,cols,180);sh.setRowHeight(1,58);sh.getRange(1,1,1,cols).setBackground(d.color).setFontColor('#ffffff').setFontWeight('bold');if(sh.getFilter())sh.getFilter().remove();range.createFilter();if(count>1){sh.setRowHeights(2,gridRows-1,54);}
     d.headers.forEach((header,i)=>{if(/Motorista|Empresa|Nome|RegistradoPor|Autor|Observacao|Dados|Imagem|Faturas|Lacres|Remitos|Produtos/.test(header))sh.setColumnWidth(i+1,/Dados|Observacao/.test(header)?480:300);});
     if(name==='Eventos_v3')sh.getRange(2,11,gridRows-1,1).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
     else if(['Fotos_v3','Fotos_Saida_v1'].includes(name))sh.getRange(2,5,gridRows-1,1).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);

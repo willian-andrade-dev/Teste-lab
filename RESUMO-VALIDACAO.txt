@@ -1,6 +1,7 @@
-Colgate v0.18 — 222 testes automatizados aprovados.
-18 acesso; 33 chegada; 41 operação; 14 sessão; 55 frontend; 44 gravação; 13 fila; 4 medições.
-Serviços Google/Drive, DOM e armazenamento simulados.
-Regressão: retenção, aprovação e entrada com checklist aprovado; comparação independente da ordem do JSON; motivos novos continuam bloqueados; autoria da autorização preservada e reenvio idempotente.
-Telefone no formulário brasileiro, cadastro por país, preenchimento por CPF e preservação de alterações digitadas enquanto a consulta está em andamento.
-Não constitui teste visual em tablet nem medição de latência real no Apps Script.
+Colgate v0.19 — 245 testes simulados aprovados.
+18 acesso; 33 chegada; 41 operação; 14 sessão; 61 frontend; 44 gravação; 17 Colômbia; 13 fila; 4 medições.
+Inclui oito finalidades CO, motoristas, veículos, migração repetida, fila/cancelamento de cadastro, causas e Outro, aprovação e entrada, exportação vazia, fotos distintas, falha de upload antes de concluir saída, reenvio idempotente, isolamento de unidade e estoque de carretas.
+Bogotá, preservação de edição manual, respostas atrasadas e traduções verificadas em VM/DOM simulado.
+Regressões brasileiras passaram. Sem acesso a planilhas reais, conta Colgate ou tablet físico.
+Validação visual não realizada: Playwright disponível, executável de navegador ausente.
+Dependências externas: formulário completo de checklist de saída e conferência da configuração real CO30/CO20/CP39, endereços e catálogos.

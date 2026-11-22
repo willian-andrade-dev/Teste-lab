@@ -64,7 +64,7 @@ function validarLogin_() {
 function publico_(c) {
   return {
     email:c.email, nome:c.usuario.Nome, pais:c.pais.Pais, perfil:c.usuario.Perfil,
-    expiraEm:c.expiraEm, idioma:['pt','en','es'].includes(c.usuario.Idioma) ? c.usuario.Idioma : c.pais.Idioma,
+    expiraEm:c.expiraEm, idioma:['pt','en','es'].includes(c.usuario.Idioma) ? c.usuario.Idioma : (c.pais.Pais==='CO'?'es':c.pais.Idioma),
     unidades:c.unidades.map(u => ({codigo:u.Codigo, nome:u.Nome, endereco:u.Endereco}))
   };
 }
@@ -147,4 +147,4 @@ function prepararControle() {
 }
 
 /** Unidades brasileiras atuais operam no fuso de São Paulo; UTC permanece na trilha técnica. */
-function fusoOperacional_(c){return c.pais.Pais==='BR'?'America/Sao_Paulo':c.pais.Fuso;}
+function fusoOperacional_(c){return c.pais.Pais==='BR'?'America/Sao_Paulo':c.pais.Pais==='CO'?'America/Bogota':c.pais.Fuso;}

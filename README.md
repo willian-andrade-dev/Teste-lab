@@ -1,3 +1,11 @@
+# Ajuste visual v0.19.1 — seleção de fotos
+
+Substitua **Index.html e ColombiaUI.html** e publique uma **New version**. Não exige preparação de planilha.
+
+A seleção de foto usa somente o campo nativo. O botão duplicado Selecionar arquivo foi removido. A remoção fica no **× sobre a prévia**, exibido apenas depois de selecionar uma imagem. O seletor nativo aceita imagens; as opções de câmera/galeria dependem do dispositivo. Obrigatoriedade e envio das fotos permanecem iguais.
+
+---
+
 # Colgate v0.19 — Operação colombiana
 
 ## Instalar a partir da v0.18

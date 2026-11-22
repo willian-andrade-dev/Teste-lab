@@ -101,7 +101,6 @@ function setupColombiaMovement(){
   input.type='file';
   input.id='coJointFile';
   input.accept='image/*';
-  input.setAttribute('capture','environment');
   input.required=true;
   const preview=document.createElement('img');
   preview.id='coJointPreview';
@@ -111,7 +110,17 @@ function setupColombiaMovement(){
     coPhoto='';
     input.value='';
     preview.hidden=true;
+    remove.hidden=true;
   });
+  remove.id='coJointRemove';
+  remove.textContent='×';
+  remove.className='photo-remove';
+  remove.setAttribute('aria-label',t('photoRemove'));
+  remove.title=t('photoRemove');
+  remove.hidden=true;
+  const frame=document.createElement('div');
+  frame.className='photo-frame';
+  frame.append(preview,remove);
   input.onchange=async()=>{
     if(!input.files?.[0])return;
     setBusy(true);
@@ -119,22 +128,20 @@ function setupColombiaMovement(){
       coPhoto=await compressPhoto(input.files[0]);
       preview.src=coPhoto;
       preview.hidden=false;
+      remove.hidden=false;
     }
     catch{
       coPhoto='';
       input.value='';
       preview.hidden=true;
+      remove.hidden=true;
       message('photoError');
     }
     finally{
       setBusy(false);
     }
   };
-  const choose=actionButton('chooseFile',()=>{
-    input.removeAttribute('capture');
-    input.click();
-  });
-  area.append(label,input,choose,preview,remove);
+  area.append(label,input,frame);
   $('movementFields').append(area);
 }
 function setupCoObservations(){

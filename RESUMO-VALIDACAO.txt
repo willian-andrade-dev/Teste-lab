@@ -1,4 +1,6 @@
-Versão 0.15
-201 testes locais: 18 acesso, 33 chegada, 41 operação, 14 sessão, 44 navegação/UI, 34 gravação/migração/estoque/cancelamento, 13 fila, 4 medições.
-Google/Drive, DOM e armazenamento simulados. Sem acesso a planilhas reais ou teste visual no tablet.
-Novos cenários: carretas dentro da unidade, troca e permanência após saída do cavalo, disputa por placa, fotos de entrada/saída separadas, cancelamento confirmado/bloqueio de envio atrasado/autoria, compatibilidade com reenvio histórico, EPI e migração do relatório para 36 colunas.
+Colgate v0.16 — 210 testes automatizados aprovados.
+18 acesso; 33 chegada; 41 operação; 14 sessão; 46 frontend; 41 gravação; 13 fila; 4 medições.
+Testes usam serviços Google/Drive, DOM e armazenamento simulados.
+Inclui destino próprio bloqueado, foto obrigatória antes da gravação, destino externo, transferência idempotente, recuperação de falha parcial, bloqueio de registro ativo no destino, isolamento de acesso e ausência de entrada física automática.
+Frontend cobre consulta de estoque na abertura, troca automática quando a carreta original saiu, confirmação explícita e texto de outro destino.
+Não constitui teste visual em tablet nem medição de latência real no Apps Script.

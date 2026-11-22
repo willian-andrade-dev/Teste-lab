@@ -40,9 +40,11 @@ PASS Saída carregada exibe estrela persistente e exige todos os campos adiciona
 PASS Trocar para descarregado remove todos os itens adicionais ocultos
 PASS Restaurar solicitação preserva múltiplas notas e lacres
 PASS Troca de carreta oferece somente opções retornadas para a unidade atual
-PASS Foto opcional de saída aparece com lacre e é limpa se ele for removido
+PASS Foto obrigatória de saída aparece com lacre e é limpa se ele for removido
 PASS Checklist apresenta exatamente três itens de EPI sem N/A
+PASS Saída consulta estoque ao abrir e força troca quando carreta original já saiu
+PASS Outro destino abre texto obrigatório e destinos conhecidos o escondem
 
-44 testes de lógica do frontend em VM/DOM simulado.
+46 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

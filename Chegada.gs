@@ -54,7 +54,7 @@ function catalogo_(ss,nome) {
 function obterConfiguracaoChegadaBackend(codigo) {
   const r=contextoUnidade_(codigo),ss=planilhaPais_(r.contexto);
   conferirCabecalho_(ss.getSheetByName('Chegadas_v2'),CHEGADA_HEADERS_);
-  return {pais:r.contexto.pais.Pais,finalidades:FINALIDADES_[r.contexto.pais.Pais],
+  return {destinos:r.contexto.pais.Pais==='BR'?destinosBR_(r.contexto,r.unidade):[],pais:r.contexto.pais.Pais,finalidades:FINALIDADES_[r.contexto.pais.Pais],
     oficial:r.contexto.usuario.Nome||r.contexto.email,
     tag:r.contexto.pais.Pais==='BR'&&/IMIGRANTES/i.test(r.unidade.Codigo+' '+r.unidade.Nome),
     origens:r.contexto.origens.filter(u=>u.Codigo!==r.unidade.Codigo).map(u=>({codigo:u.Codigo,nome:u.Nome})),

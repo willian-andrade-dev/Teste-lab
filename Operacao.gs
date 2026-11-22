@@ -61,7 +61,7 @@ function obterPainelOperacaoBackend(codigo){
   const indice=Object.create(null);
   eventos.forEach(e=>{if(e[4]===r.unidade.Codigo&&e[5]===r.contexto.pais.Pais)(indice[e[3]]||(indice[e[3]]=[])).push(e);});
   const photoSheet=ss.getSheetByName('Fotos_v3'),photoCount=photoSheet?photoSheet.getLastRow()-1:0;const fotos=new Set(photoCount>0?photoSheet.getRange(2,1,photoCount,1).getDisplayValues().map(x=>x[0]):[]);
-  const all=rows.map(x=>Object.assign(viagemPublica_(x,indice[x[0]]||[]),{temFotoLacre:fotos.has(x[0])})).reverse();
+  const all=rows.map(x=>Object.assign(viagemPublica_(x,indice[x[0]]||[]),{temFotoLacre:fotos.has(x[0]),transferenciaRecebida:x[1].indexOf('transf-')===0})).reverse();
   return {recentes:all.slice(0,50),entrada:all.filter(x=>!['DENTRO_UNIDADE','CONCLUIDO','RECUSADO'].includes(x.status)),
     saida:all.filter(x=>x.status==='DENTRO_UNIDADE'),concluidos:all.filter(x=>['CONCLUIDO','RECUSADO'].includes(x.status)).slice(0,30),
     podeAutorizar:['GERENTE','ADMINISTRADOR'].includes(r.contexto.usuario.Perfil)};
@@ -114,14 +114,15 @@ function registrarMovimentoCore_(d,med){
       dados={checklist,carregado,destino:carregado==='SIM'?textoChegada_(d.destino,'destino',160,true):'',faturas:listaChegada_(d.faturas||[],'faturas',carregado==='SIM'),lacres:listaChegada_(d.lacres||[],'lacres',carregado==='SIM'),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
       if(carregado==='NAO'&&dados.lacres.length&&!dados.faturas.length)falhar_('CAMPO_OBRIGATORIO:faturas');
     }else falhar_('ACAO_INVALIDA');
+    if(acao==='SAIDA'&&c.pais.Pais==='BR'&&d.destinoCodigo){const destino=validarDestinoBR_(c,r.unidade,d,anterior);dados.destino=destino.nome;dados.destinoCodigo=destino.codigo;}
     if(acao==='SAIDA'&&(!anterior||Object.prototype.hasOwnProperty.call(dadosAnteriores,'placasCarretasSaida')))dados.placasCarretasSaida=d.trocarCarretas==='SIM'?(Array.isArray(d.placasCarretasSaida)?d.placasCarretasSaida.map(placaPatio_):[]):row.slice(18,20).filter(Boolean);
     const foto=['ENTRADA','SAIDA'].includes(acao)?validarFotoLacre_(d.fotoLacre):'';
-    const exigeFoto=acao==='ENTRADA'&&JSON.parse(row[23]||'[]').length>0;
+    const exigeFoto=(acao==='ENTRADA'&&JSON.parse(row[23]||'[]').length>0)||(acao==='SAIDA'&&dados.lacres.length>0&&(!anterior||!!dadosAnteriores.fotoLacreHash));
     if(exigeFoto&&!foto)falhar_('FOTO_OBRIGATORIA');
     if((acao==='ENTRADA'&&!exigeFoto&&foto)||(acao==='SAIDA'&&foto&&!dados.lacres.length)||(!['ENTRADA','SAIDA'].includes(acao)&&d.fotoLacre))falhar_('FOTO_NAO_APLICAVEL');
     if(foto)dados.fotoLacreHash=hashV3_(foto);
     const hash=hashV3_({acao,dados});const repetido=eventos.find(e=>e[1]===key);
-    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');med.marcar('validacao_leitura');med.gravacaoIniciada=true;if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');atualizarViagemVisoes_(ss,c,row,eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:true};}
+    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');med.marcar('validacao_leitura');med.gravacaoIniciada=true;if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:true};}
     if(!Number.isInteger(d.revisao)||d.revisao!==s.revisao)falhar_('REGISTRO_ATUALIZADO');
     if(['ENTRADA','RETER'].includes(acao)&&!['AGUARDANDO_ENTRADA','PENDENTE_AVALIACAO','AGUARDANDO_AUTORIZACAO','LIBERADO'].includes(s.status))falhar_('TRANSICAO_INVALIDA');
     if(acao==='RETER'&&!dados.divergencia)falhar_('CAMPO_OBRIGATORIO:divergencia');
@@ -135,11 +136,12 @@ function registrarMovimentoCore_(d,med){
       if(s.status==='LIBERADO'&&dados.divergencia&&(!s.retencao||dados.divergencia!==s.retencao.divergencia))falhar_('NOVA_AVALIACAO_NECESSARIA');
     }
     if(acao==='SAIDA'&&s.status!=='DENTRO_UNIDADE')falhar_('TRANSICAO_INVALIDA');
+    if(acao==='SAIDA'&&dados.destinoCodigo)conferirDestinoLivre_(todas,eventos,row,dados);
     const event=[Utilities.getUuid(),key,hash,id,r.unidade.Codigo,c.pais.Pais,acao,new Date().toISOString(),c.email,c.usuario.Nome||c.email,JSON.stringify(dados)];
     if(event[10].length>45000)falhar_('ANEXO_MUITO_GRANDE');
     med.marcar('validacao_leitura');med.gravacaoIniciada=true;
     const sh=ss.getSheetByName('Eventos_v3');sh.getRange(sh.getLastRow()+1,1,1,event.length).setNumberFormat('@').setValues([event.map(celulaTexto_)]);
-    eventos.push(event);if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');med.marcar('gravacao');atualizarViagemVisoes_(ss,c,row,eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:false};
+    eventos.push(event);if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');med.marcar('gravacao');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:false};
   }finally{lock.releaseLock();}
 }
 function validarFotoLacre_(v){const s=textoChegada_(v,'fotoLacre',40000,false);if(s&&!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s))falhar_('FOTO_INVALIDA');if(s&&s.indexOf('data:image/jpeg;base64,/9j/')!==0)falhar_('FOTO_INVALIDA');return s;}
@@ -254,4 +256,40 @@ function formatarAbasApoio_(ss,pais){
     else if(['Fotos_v3','Fotos_Saida_v1'].includes(name))sh.getRange(2,5,gridRows-1,1).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
     else sh.autoResizeRows(2,count-1);
   });
+}
+
+/** Destinos internos usam o código autorizado; outros destinos não geram recebimento automático. */
+function destinosBR_(c,unidade){
+ const labels=['Imigrantes','Anchieta','Jaguaré'];
+ const normal=v=>String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ return labels.map(nome=>{const u=c.origens.find(x=>normal(x.Codigo+' '+x.Nome).includes(normal(nome)));return u&&u.Codigo!==unidade.Codigo?{codigo:u.Codigo,nome}:null;}).filter(Boolean).concat(['RCR','Gylog','CD Nysseis','K&G','Provider'].map(nome=>({codigo:'EXTERNO-'+nome,nome})),[{codigo:'OUTRO',nome:'Outro'}]);
+}
+function validarDestinoBR_(c,unidade,d,anterior){
+ if(d.carregado!=='SIM')falhar_('DESTINO_INVALIDO');
+ const selected=destinosBR_(c,unidade).find(x=>x.codigo===d.destinoCodigo);
+ if(!selected)falhar_('DESTINO_INVALIDO');
+ return {codigo:selected.codigo,nome:selected.codigo==='OUTRO'?textoChegada_(d.destino,'destino',160,true):selected.nome};
+}
+function destinoInterno_(dados){return dados.destinoCodigo&&!dados.destinoCodigo.startsWith('EXTERNO-')&&dados.destinoCodigo!=='OUTRO';}
+function conferirDestinoLivre_(rows,eventos,row,dados){
+ if(!destinoInterno_(dados))return;
+ const placas=[row[17],...(dados.placasCarretasSaida||[])];
+ if(rows.some(x=>x[3]===row[3]&&x[4]===dados.destinoCodigo&&!['CONCLUIDO','RECUSADO'].includes(estadoViagem_(x,eventos).status)&&(x[13]===row[13]||x.slice(17,20).filter(Boolean).some(p=>placas.includes(p)))))falhar_('DESTINO_REGISTRO_ATIVO');
+}
+function chaveTransferencia_(event){return 'transf-'+hashV3_(event[1]).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);}
+function encaminharTransferencia_(ss,c,origem,event,eventos){
+ const dados=JSON.parse(event[10]);if(origem[3]!=='BR'||!destinoInterno_(dados))return;
+ const table=rowsChegadas_(ss),key=chaveTransferencia_(event);let row=table.rows.find(x=>x[1]===key);
+ if(!row){
+  row=origem.slice();row[0]='receb-'+key;row[1]=key;row[2]=hashV3_({origem:origem[0],saida:event[0]});row[4]=dados.destinoCodigo;row[5]='AGUARDANDO_ENTRADA';row[6]=event[7];row[7]=Utilities.formatDate(new Date(event[7]),fusoOperacional_(c),'yyyy-MM-dd');row[8]=Utilities.formatDate(new Date(event[7]),fusoOperacional_(c),'HH:mm:ss');row[10]=event[8];row[11]=event[9];row[12]='TRANSFERENCIA';row[18]=(dados.placasCarretasSaida||[])[0]||'';row[19]=(dados.placasCarretasSaida||[])[1]||'';row[23]=JSON.stringify(dados.faturas);row[24]=JSON.stringify(dados.lacres);row[26]=origem[4];row[31]='';row[34]=dados.observacao||'';
+  table.sheet.getRange(table.sheet.getLastRow()+1,1,1,row.length).setNumberFormat('@').setValues([row.map(celulaTexto_)]);
+ }
+ atualizarViagemVisoes_(ss,c,row,eventos);
+}
+function obterInformacoesTransferenciaBackend(codigo,id){
+ const r=contextoUnidade_(codigo),c=r.contexto,ss=planilhaPais_(c),row=viagemAutorizada_(ss,c,r.unidade.Codigo,id);
+ if(row[3]!=='BR'||!row[1].startsWith('transf-'))falhar_('ACESSO_NEGADO');
+ const events=eventosV3_(ss),event=events.find(e=>e[5]===row[3]&&e[6]==='SAIDA'&&chaveTransferencia_(e)===row[1]&&JSON.parse(e[10]).destinoCodigo===row[4]);
+ if(!event)falhar_('ACESSO_NEGADO');const dados=JSON.parse(event[10]),source=rowsChegadas_(ss).rows.find(x=>x[0]===event[3]&&x[4]===event[4]&&x[3]===row[3]);if(!source)falhar_('ACESSO_NEGADO');
+ const url=urlFotoDireta_(ss,source[0],'SAIDA');return {origem:(c.origens.find(u=>u.Codigo===source[4])||{}).Nome||source[4],destino:(c.origens.find(u=>u.Codigo===row[4])||{}).Nome||row[4],motorista:row[14],documento:row[13],telefone:row[15],empresa:row[16],placas:row.slice(17,20).filter(Boolean),faturas:dados.faturas,lacres:dados.lacres,observacao:dados.observacao,saida:event[7],foto:url?imagemFotoArmazenada_(url,c.pais.Pais):''};
 }

@@ -1,3 +1,27 @@
+# Colgate v0.16 — Destinos e transferências entre plantas brasileiras
+
+## Atualizar da versão 0.15
+
+1. Antes de atualizar, conclua ou reenvie operações pendentes nos dispositivos. Não limpe os dados do navegador.
+2. Substitua **Chegada.gs, Operacao.gs e Index.html** pelos arquivos deste repositório. Preserve os outros arquivos da versão 0.15.
+3. Publique uma **New version** no Deploy e reabra o aplicativo nos tablets. Quem já preparou a versão 0.15 não precisa executar outra preparação: esta atualização usa as mesmas abas e permissões. Em instalação anterior, siga a preparação da versão 0.15 abaixo.
+4. Confira na configuração central se **Imigrantes, Anchieta e Jaguaré** estão cadastradas como unidades ativas do Brasil, com códigos próprios, apontando para a mesma planilha brasileira do país. Cada usuário continua vendo somente as unidades atribuídas a ele. Uma sessão já aberta só reconhece mudanças de configuração ao renovar o login.
+
+## Comportamento da versão 0.16
+
+- Destinos brasileiros: Imigrantes, Anchieta, Jaguaré (unidades ativas cadastradas, excluindo a unidade atual), RCR, Gylog, CD Nysseis, K&G, Provider e Outro. Outro abre um campo obrigatório. Destinos externos não criam recebimentos entre unidades. Veículos descarregados continuam dispensados de destino, conforme regra anterior.
+- Havendo qualquer lacre na saída, a foto é obrigatória no formulário e no servidor, inclusive nos casos raros de saída descarregada com nota/lacre. Reenvios de saídas históricas já gravadas sem foto continuam idempotentes.
+- Ao abrir uma saída, o sistema consulta as carretas presentes no pátio. Se a carreta original já saiu com outro cavalo, abre a troca automaticamente e exige conferência explícita das carretas selecionadas ou da saída sem carreta. A confirmação consulta o estoque novamente antes de entrar na fila de gravação. A gravação final também valida sob trava: a conferência prévia não reserva uma carreta.
+- Saída carregada com destino a outra unidade interna gera automaticamente uma viagem na fila de entrada dessa unidade, com motorista, documento, telefone, empresa, cavalo, carretas efetivamente levadas, notas e lacres de saída. Não exige outro cadastro manual na chegada. O registro significa **aguardando entrada**, podendo ainda estar em trânsito: não marca entrada física nem adiciona as carretas ao pátio do destino.
+- A fila de entrada brasileira atualiza em segundo plano a cada 30 segundos enquanto está visível e sem formulário aberto; também pode ser atualizada manualmente. Não há atualização em tempo real via push.
+- O botão **Verificar informações da transferência** mostra origem, dados do motorista e carga e a foto do lacre enviada na saída. O servidor só permite consultar esses dados por uma viagem recebida na unidade autorizada, sem conceder acesso geral aos registros de outra planta.
+- A conferência de entrada continua exigindo checklist, assinaturas e foto local quando houver notas. A foto da origem é uma referência para comparação, preservada separadamente da foto de entrada.
+- Reenvios usam uma chave derivada da saída: não duplicam a viagem no destino e reparam falhas parciais. Se já existir motorista ou veículo ativo no destino, a saída é recusada antes da gravação. A saída só está confirmada após a confirmação do servidor; uma solicitação ainda pendente no ícone de sincronização não é uma liberação física.
+
+Validação: **210 testes automatizados com serviços Google, DOM e armazenamento simulados**. Não houve teste com planilhas reais, conta Colgate ou tablet físico nesta atualização.
+
+---
+
 # Colgate v0.15 — Troca de carretas, foto de saída, cancelamento e EPI
 
 ## Instalar

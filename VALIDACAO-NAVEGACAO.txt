@@ -44,7 +44,13 @@ PASS Foto obrigatória de saída aparece com lacre e é limpa se ele for removid
 PASS Checklist apresenta exatamente três itens de EPI sem N/A
 PASS Saída consulta estoque ao abrir e força troca quando carreta original já saiu
 PASS Outro destino abre texto obrigatório e destinos conhecidos o escondem
+PASS Horário de transferência usa São Paulo e formatação local, sem depender do fuso do tablet
+PASS Pendências aparecem no painel lateral e não duplicam a fila de entrada
+PASS Segurança acompanha pendência sem botões de aprovação e gerente pode decidir
+PASS Checklist não conforme é enviado como retenção, sem exigir foto de entrada física
+PASS Aprovação mostra as respostas e causas retidas para decisão do gestor
+PASS Checklist já aprovado não volta para retenção sem alteração dos motivos
 
-46 testes de lógica do frontend em VM/DOM simulado.
+52 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

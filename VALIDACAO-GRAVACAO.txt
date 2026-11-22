@@ -39,8 +39,9 @@ PASS Reenvio repara recebimento após falha parcial sem duplicar saída
 PASS Destino com motorista ativo impede saída antes da gravação
 PASS Outro destino mantém texto livre sem criar recebimento interno
 PASS Recebimento só ocupa pátio após checklist e assinaturas na planta de destino
+PASS Retenção mantém veículo fora da planta e só gerente ou administrador pode decidir
 
-41 testes com serviços Google simulados.
+42 testes com serviços Google simulados.
 Com vinte viagens anteriores, operações comuns atualizam uma linha em Controle_BR. Transferências criam também a linha do destino.
 A movimentação não leu o conteúdo das imagens dos outros lacres.
 Sem medição de latência no Apps Script real.

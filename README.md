@@ -1,3 +1,23 @@
+# Colgate v0.17 — Painel permanente de aprovações e horário das transferências
+
+## Atualizar da v0.16
+
+1. Substitua **Index.html e Operacao.gs**.
+2. Publique uma **New version** no Deploy e reabra o aplicativo.
+3. Não é necessário preparar a planilha novamente. Não há novas abas, colunas ou permissões Google.
+
+As informações de transferência mostram data e hora no fuso **America/Sao_Paulo**, independentemente do fuso do tablet. O formato segue o idioma selecionado; em português, por exemplo, **22/11/2026, 12:07**. Os detalhes são apresentados em pares de rótulo e valor, com espaçamento e adaptação a telas menores. O instante UTC original permanece no registro para auditoria.
+
+O painel **Aguardando aprovação** aparece à direita de Chegada, Entrada e Saída. Os registros pendentes deixam a lista comum de entrada e aparecem nesse painel com motorista, placa, finalidade, empresa e motivos. O painel acompanha a rolagem, tem contador, estado vazio e atualização manual. Em telas estreitas, vira uma faixa recolhível no topo, alinhada à direita, para não cobrir o formulário. A atualização em segundo plano a cada 30 segundos funciona nas três telas, nos dois países, quando o aplicativo está visível e sem formulário de movimentação aberto.
+
+Ao marcar uma resposta **Não conforme**, o botão de confirmação passa para **Enviar para aprovação**. O envio usa a retenção existente no servidor, guarda checklist, causas e assinaturas e mantém o veículo fora da planta. Os motivos do checklist preenchem automaticamente a divergência quando ela não foi digitada. Não exige foto de entrada física nessa retenção; essa foto continua obrigatória na entrada efetiva quando houver nota.
+
+Todos os operadores autorizados da unidade podem acompanhar as pendências. Somente **GERENTE (gestor)** e **ADMINISTRADOR** podem aprovar ou rejeitar, com justificativa obrigatória. A restrição é validada no servidor e continua respeitando as unidades e o país do usuário. A tela de decisão mostra as respostas e causas do checklist. Aprovação não registra entrada física: o guarda precisa concluir essa etapa depois. Um checklist já aprovado com os mesmos motivos pode seguir para entrada; alterar os motivos exige nova avaliação.
+
+**217 testes automatizados aprovados**, com serviços Google, Drive, DOM e armazenamento simulados. Incluem fuso diferente do tablet, encaminhamento automático para retenção, decisão por perfil e manutenção do veículo fora da planta. Não houve teste visual no tablet físico nem execução com planilhas reais nesta atualização.
+
+---
+
 # Colgate v0.16 — Destinos e transferências entre plantas brasileiras
 
 ## Atualizar da versão 0.15

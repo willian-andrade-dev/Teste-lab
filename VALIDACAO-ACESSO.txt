@@ -21,6 +21,8 @@ PASS Troca país sem consultar controle ou renovar sessão e cada unidade manté
 PASS Gerente e segurança não podem obter acesso a vários países
 PASS País sem unidade atribuída e unidade externa continuam bloqueados
 PASS Novo login conserva país escolhido apenas se ainda estiver autorizado
+PASS Login identifica Brasil sem unidade e funciona após corrigir a mesma linha
+PASS Configuração errada distingue perfil multipaís de país escrito como nome
 
-23 testes locais de autorização aprovados. Serviços Google simulados.
+25 testes locais de autorização aprovados. Serviços Google simulados.
 Implantação e autenticação reais ainda não testadas.

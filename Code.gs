@@ -43,19 +43,21 @@ function validarLogin_() {
   const u = usuarios[0];
   if (!['SEGURANCA', 'GERENTE', 'ADMINISTRADOR'].includes(u.Perfil)) falhar_('ACESSO_NEGADO');
   const codigos=u.Pais.split(';').map(x=>x.trim()).filter(Boolean);
-  if(!codigos.length||new Set(codigos).size!==codigos.length||(codigos.length>1&&u.Perfil!=='ADMINISTRADOR'))falhar_('ACESSO_NEGADO');
+  if(!codigos.length||new Set(codigos).size!==codigos.length)falhar_('ACESSO_NEGADO:LOGIN_PAISES_FORMATO');
+  if(codigos.length>1&&u.Perfil!=='ADMINISTRADOR')falhar_('ACESSO_NEGADO:LOGIN_MULTIPAIS_ADMIN');
   const todosPaises=tabela_('Paises'),todas=tabela_('Unidades');
+  if(codigos.some(codigo=>{const matches=todosPaises.filter(p=>p.Pais===codigo);return matches.length!==1||matches[0].Status!=='ATIVO';}))falhar_('ACESSO_NEGADO:LOGIN_PAIS_CONFIG');
   const ids=u.Unidades.split(';').map(x=>x.trim()).filter(Boolean);
-  if(!ids.length||new Set(ids).size!==ids.length)falhar_('ACESSO_NEGADO');
-  const unidades=ids.map(id=>{const matches=todas.filter(x=>x.Codigo===id);if(matches.length!==1||!codigos.includes(matches[0].Pais)||matches[0].Status!=='ATIVO')falhar_('ACESSO_NEGADO');return matches[0];});
+  if(!ids.length||new Set(ids).size!==ids.length)falhar_('ACESSO_NEGADO:LOGIN_UNIDADES_FORMATO');
+  const unidades=ids.map(id=>{const matches=todas.filter(x=>x.Codigo===id);if(matches.length!==1||!codigos.includes(matches[0].Pais)||matches[0].Status!=='ATIVO')falhar_('ACESSO_NEGADO:LOGIN_UNIDADE_CONFIG');return matches[0];});
   const acessos=codigos.map(codigo=>{
     const matches=todosPaises.filter(p=>p.Pais===codigo);
-    if(matches.length!==1||matches[0].Status!=='ATIVO')falhar_('ACESSO_NEGADO');
+    if(matches.length!==1||matches[0].Status!=='ATIVO')falhar_('ACESSO_NEGADO:LOGIN_PAIS_CONFIG');
     const p=matches[0];
     if(!p.PlanilhaID||!p.Fuso||!['pt','en','es'].includes(p.Idioma))falhar_('CONFIGURACAO_PENDENTE');
     if(p.PlanilhaID===String(propriedades_().getProperty('PLANILHA_CONTROLE_ID')||'').trim())falhar_('PLANILHA_OPERACIONAL_INVALIDA');
     if(todosPaises.some(x=>x.Pais!==codigo&&x.PlanilhaID===p.PlanilhaID))falhar_('PLANILHA_COMPARTILHADA_ENTRE_PAISES');
-    const permitidas=unidades.filter(x=>x.Pais===codigo);if(!permitidas.length)falhar_('ACESSO_NEGADO');
+    const permitidas=unidades.filter(x=>x.Pais===codigo);if(!permitidas.length)falhar_('ACESSO_NEGADO:LOGIN_PAIS_SEM_UNIDADE_'+codigo);
     return {pais:p,unidades:permitidas,origens:todas.filter(x=>x.Pais===codigo&&x.Status==='ATIVO')};
   });
   const c=Object.assign({email,usuario:u},acessos[0]);if(acessos.length>1)c.acessos=acessos;return c;

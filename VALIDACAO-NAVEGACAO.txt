@@ -63,7 +63,8 @@ PASS Seletor de país aparece somente para sessão com vários países
 PASS Conferência do contêiner mostra seis para o exemplo e bloqueia dígito divergente
 PASS Produtos colombianos permitem seleção por toque, busca e coleta sem Ctrl
 PASS Pré-cadastro fica fora dos campos e empresa mantém posição ao mudar finalidade
+PASS Erro de login mostra correção da configuração antes da mensagem genérica de acesso
 
-65 testes de lógica do frontend em VM/DOM simulado.
+66 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

@@ -1,3 +1,23 @@
+# Ajuste v0.22.1 — diagnóstico de login multipaís
+
+Substitua **Code.gs e Index.html**, salve e publique uma **New version** no Deploy. Não execute preparação de planilhas para corrigir autorização.
+
+A tela inicial informa quando faltam unidades de um país, quando o perfil não permite multipaís ou quando os códigos/estado de país e unidade estão incorretos. O erro genérico não manda mais voltar a uma seleção de unidades que ainda não abriu. As regras de acesso permanecem restritas; a alteração não concede acesso automaticamente.
+
+Para uma conta ADMINISTRADOR acessar Brasil e Colômbia:
+
+- Uma única linha por e-mail na aba central **Usuarios**.
+- **Pais:** `BR;CO` (ou `CO;BR`), com ponto e vírgula. Não escrever `Brasil;Colombia`.
+- **Unidades:** ao menos um código ativo de cada país. Exemplo: `BR-JAGUARE;CO30`, usando códigos realmente cadastrados na aba Unidades.
+- **Perfil:** `ADMINISTRADOR`. **Status:** `ATIVO`.
+- Na aba **Paises**, manter duas linhas separadas: uma com Pais `BR` e outra com `CO`. Nunca juntar os países nessa aba. Cada um possui sua própria planilha operacional.
+
+Depois de corrigir a configuração, clique em **Tentar novamente**. Não apague cookies, dados do navegador ou solicitações pendentes. Se a configuração já estiver correta, confirme que a implantação publicada utiliza o Code.gs com suporte multipaís; salvar o arquivo no editor não substitui a versão publicada do aplicativo.
+
+**263 testes simulados aprovados**, incluindo login recusado por país sem unidade, correção da mesma linha seguida de login válido e mensagens específicas de configuração. Sem acesso à configuração real da conta do solicitante; o diagnóstico exato depende dos dados preenchidos nela.
+
+---
+
 # Colgate v0.22 — Planilha colombiana com controle consolidado
 
 ## Atualizar da v0.21

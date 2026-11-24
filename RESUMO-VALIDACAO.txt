@@ -1,5 +1,5 @@
-Colgate v0.22 — 260 testes simulados aprovados.
-23 acesso; 33 chegada; 41 operação; 14 sessão; 65 frontend; 45 gravação; 22 Colômbia; 13 fila; 4 medições.
-Controle colombiano: uma linha por viagem, status atual pelos eventos, chegada/entrada/saída, links de três fotos, sem bytes de anexos no relatório.
-Reconstrução repetida sem modificar fontes, abas técnicas ocultas e controle em primeiro; atualização incremental correta após ordenar as linhas.
-Regressões brasileiras passaram. Google/Drive/Sheets e DOM simulados. Sem execução ou teste visual na planilha real.
+Colgate v0.22.1 — 263 testes simulados aprovados.
+25 acesso; 33 chegada; 41 operação; 14 sessão; 66 frontend; 45 gravação; 22 Colômbia; 13 fila; 4 medições.
+Diagnóstico de login: país sem unidade, perfil sem acesso multipaís, código inválido, nova tentativa após correção.
+Nenhuma flexibilização de autorização; identidade, país/unidade, status e perfil continuam obrigatórios.
+Google/Drive/Sheets e DOM simulados; sem acesso à configuração real do usuário ou autenticação Colgate.

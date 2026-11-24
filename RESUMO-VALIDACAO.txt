@@ -1,6 +1,6 @@
-Colgate v0.20 — 254 testes simulados aprovados.
-23 acesso; 33 chegada; 41 operação; 14 sessão; 63 frontend; 45 gravação; 18 Colômbia; 13 fila; 4 medições.
-Administrador multipaís com uma linha por e-mail, países e unidades explícitos. Bloqueio de perfis e unidades não autorizadas.
-Troca sem renovação da sessão e sem leitura do controle; envios preservam país/planilha pela unidade autorizada.
-Conferência de contêiner durante preenchimento, exemplo ICSU4065506 e resto dez resultando em zero.
-Serviços Google/Drive e DOM simulados. Sem autenticação Colgate, implantação ou teste real no tablet.
+Colgate v0.21 — 256 testes simulados aprovados.
+23 acesso; 33 chegada; 41 operação; 14 sessão; 65 frontend; 45 gravação; 18 Colômbia; 13 fila; 4 medições.
+Seleção por toque de produtos, busca sem perder seleção e coleta de códigos para o backend.
+Pré-cadastro fora da grade e posição estável da transportadora.
+Mantidas regressões de países, permissões, contêiner, fotos e aprovações.
+Serviços Google/Drive e DOM simulados. Sem execução na conta Colgate nem teste visual no tablet físico.

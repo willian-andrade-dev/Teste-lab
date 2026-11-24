@@ -1,3 +1,19 @@
+# Colgate v0.21 — Chegada mais clara na Colômbia
+
+## Atualizar da v0.20
+
+Substitua **Index.html e ColombiaUI.html**, publique uma **New version** e reabra o aplicativo. Não há migração de planilha nem mudança de permissão.
+
+- Pré-cadastros saiu do meio dos campos e passou para uma ação secundária no topo da chegada. A explicação deixa claro que a chegada normal já cadastra o motorista automaticamente; pré-cadastro serve para antecipar ou corrigir dados.
+- Transportadora mantém sua posição ao trocar a finalidade, evitando a reorganização inesperada dos campos.
+- Número do contêiner mostra o exemplo **ICSU4065506** e explica: quatro letras, seis números de série e um dígito verificador. A conferência existente continua mostrando o dígito esperado e exigindo confirmação física.
+- Produtos colombianos usam busca por código/nome e caixas de seleção por toque, sem Ctrl/Cmd. A busca não apaga os produtos já selecionados. A seleção é obrigatória nas finalidades aplicáveis e conserva o contrato de gravação existente.
+- Cabeçalho, espaçamento e grupos da chegada foram ajustados para leitura no tablet, preservando os temas e o painel de aprovações.
+
+**256 testes simulados passaram**, incluindo seleção/filtragem/coleta dos produtos e preservação da posição da transportadora. Não houve teste visual no tablet físico ou execução contra planilha real nesta alteração.
+
+---
+
 # Colgate v0.20 — Administrador multipaís e conferência de contêiner
 
 ## Atualizar da v0.19.1

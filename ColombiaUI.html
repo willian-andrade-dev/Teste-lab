@@ -327,10 +327,7 @@ function coFieldError(id,key){
       el.closest('.field')?.append(hint);
     }
     hint.textContent=t(key);
-    el.oninput=()=>{
-      el.setCustomValidity('');
-      hint.textContent='';
-    };
+    if(!el.dataset.coErrorWatcher){el.dataset.coErrorWatcher='true';el.addEventListener('input',()=>{if(id!=='container')el.setCustomValidity('');hint.textContent='';});}
     el.focus();
   }
   message(key);
@@ -344,16 +341,20 @@ function validateCoArrival(){
     if(new Set(list).size!==list.length)return coFieldError(k,'coDuplicate');
   }
   if(value('finalidade')==='IMPORTACAO'&&lines('faturas').length!==1)return coFieldError('faturas','coSingleInvoice');
-  if($('container')){
-    const c=value('container').replace(/\s/g,'').toUpperCase(),letters={
-      A:10,B:12,C:13,D:14,E:15,F:16,G:17,H:18,I:19,J:20,K:21,L:23,M:24,N:25,O:26,P:27,Q:28,R:29,S:30,T:31,U:32,V:34,W:35,X:36,Y:37,Z:38
-    };
-    let sum=0;
-    for(let i=0;
-    i<10;
-    i++)sum+=(i<4?letters[c[i]]:Number(c[i]))*2**i;
-    if(!/^[A-Z]{3}[UJZ]\d{7}$/.test(c)||(sum%11)%10!==Number(c[10]))return coFieldError('container','CONTAINER_ERROR');
-  }
+  if($('container')){const c=value('container').replace(/[\s-]/g,'').toUpperCase();if(c.length!==11||containerCheckDigit(c.slice(0,10))!==Number(c[10]))return coFieldError('container','CONTAINER_ERROR');}
   return true;
+}
+
+/** O dígito é calculado para conferência, nunca preenchido automaticamente. */
+function containerCheckDigit(base){
+  if(!/^[A-Z]{3}[UJZ]\d{6}$/.test(base))return null;
+  const letters={A:10,B:12,C:13,D:14,E:15,F:16,G:17,H:18,I:19,J:20,K:21,L:23,M:24,N:25,O:26,P:27,Q:28,R:29,S:30,T:31,U:32,V:34,W:35,X:36,Y:37,Z:38};
+  let sum=0;for(let i=0;i<10;i++)sum+=(i<4?letters[base[i]]:Number(base[i]))*2**i;
+  return (sum%11)%10;
+}
+function setupContainerVerification(){
+  const input=$('container');if(config.pais!=='CO'||!input)return;
+  const result=document.createElement('small');result.id='containerVerification';result.setAttribute('role','status');result.setAttribute('aria-live','polite');$('field-container').append(result);input.setAttribute('aria-describedby','containerVerification');
+  input.oninput=()=>{input.value=input.value.replace(/[\s-]/g,'').toUpperCase();$('containerConfirmado').checked=false;const c=input.value,digit=containerCheckDigit(c.slice(0,10));result.textContent=digit===null?'':t(c.length===11?(Number(c[10])===digit?'containerMatches':'containerMismatch'):'containerExpected').replace('{digit}',String(digit));const invalid=c.length===11&&(digit===null||Number(c[10])!==digit);input.setCustomValidity(invalid?t('containerMismatch').replace('{digit}',String(digit??'—')):'');input.setAttribute('aria-invalid',String(invalid));result.className=invalid?'field-error':'muted';};
 }
 </script>

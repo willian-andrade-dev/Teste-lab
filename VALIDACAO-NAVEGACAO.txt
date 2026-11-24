@@ -59,7 +59,9 @@ PASS Colômbia exige foto de lacre no contêiner vazio e foto conjunta na saída
 PASS Validação colombiana aponta telefone inválido antes da fila
 PASS Observação atrasada de outro documento é ignorada
 PASS Todos os idiomas contêm as novas chaves colombianas
+PASS Seletor de país aparece somente para sessão com vários países
+PASS Conferência do contêiner mostra seis para o exemplo e bloqueia dígito divergente
 
-61 testes de lógica do frontend em VM/DOM simulado.
+63 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

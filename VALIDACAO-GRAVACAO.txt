@@ -42,8 +42,9 @@ PASS Recebimento só ocupa pátio após checklist e assinaturas na planta de des
 PASS Retenção mantém veículo fora da planta e só gerente ou administrador pode decidir
 PASS Aprovação seguida de entrada aceita o mesmo checklist e bloqueia novos motivos reais
 PASS Telefone informado na chegada fica no cadastro e retorna na consulta pelo CPF
+PASS Administrador multipaís grava pela unidade sem redirecionar envio após troca de país
 
-44 testes com serviços Google simulados.
+45 testes com serviços Google simulados.
 Com vinte viagens anteriores, operações comuns atualizam uma linha em Controle_BR. Transferências criam também a linha do destino.
 A movimentação não leu o conteúdo das imagens dos outros lacres.
 Sem medição de latência no Apps Script real.

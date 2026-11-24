@@ -1,3 +1,41 @@
+# Colgate v0.20 — Administrador multipaís e conferência de contêiner
+
+## Atualizar da v0.19.1
+
+1. Substitua **Code.gs, Index.html e ColombiaUI.html** e publique uma **New version**.
+2. Não precisa executar preparação de planilhas ou migração. As colunas da aba central Usuarios permanecem iguais.
+3. Para um administrador operar dois países, mantenha **uma única linha para o e-mail** na aba **Usuarios**:
+
+| Campo | Exemplo |
+|---|---|
+| Pais | BR;CO |
+| Unidades | BR-JAGUARE;CO30 |
+| Perfil | ADMINISTRADOR |
+| Status | ATIVO |
+
+Use exatamente os códigos existentes nas abas Paises e Unidades. O exemplo autoriza somente Jaguaré e CO30. Para outras unidades, acrescente seus códigos separados por ponto e vírgula, como já ocorre hoje. Cada país listado deve ter ao menos uma unidade atribuída, estar ativo e possuir sua própria planilha. Não duplique o e-mail em duas linhas.
+
+O usuário precisa reabrir o aplicativo para atualizar as autorizações do login. Aparece um seletor de países no topo. A troca apresenta as unidades do país escolhido e limpa os dados visuais da unidade anterior. O outro país não recebe acesso por ser administrador: ambos precisam estar explicitamente cadastrados na mesma linha. Os demais perfis continuam com um único país; a tela não oferece acesso multipaís para GERENTE ou SEGURANCA.
+
+A troca usa a sessão validada, sem releitura das tabelas centrais e sem renovar suas quatro horas. A unidade de cada requisição resolve o país/planilha no servidor dentro dos acessos autorizados: um envio em andamento não muda de destino quando se altera o país na tela. A fila persistente conserva as solicitações e apresenta/processa as do país ativo. Não apague pendências para trocar de país. Operações administrativas executadas no editor mantêm o último país escolhido, depois de validar novamente a configuração e os perfis.
+
+## Contêiner colombiano
+
+A fórmula do dígito verificador já existia no servidor. Agora o campo de Exportação mostra também a conferência durante o preenchimento:
+
+- Com quatro letras e seis números, mostra o dígito esperado.
+- Com o número completo, informa se o dígito coincide; divergência destaca o campo e impede envio.
+- Aceita colagem com espaços/hífens e normaliza as letras para maiúsculas.
+- Não completa nem corrige o dígito automaticamente. O vigilante compara com a identificação física e confirma a conferência.
+- Alterar o número desmarca a confirmação física anterior.
+- Exemplo do gerente: **ICSU4065506**. Resto dez produz dígito **zero**, e não dez.
+
+## Validação
+
+**254 testes simulados**: 23 acesso, 33 chegada, 41 operação, 14 sessão, 63 frontend, 45 gravação, 18 Colômbia, 13 fila e 4 medições. Incluem administração em dois países, bloqueio de perfis/unidades não autorizados, conservação do vencimento da sessão, gravação correta de envios após troca e o exemplo do contêiner. Não houve implantação ou autenticação real na conta Colgate nem teste visual em tablet nesta atualização.
+
+---
+
 # Ajuste visual v0.19.1 — seleção de fotos
 
 Substitua **Index.html e ColombiaUI.html** e publique uma **New version**. Não exige preparação de planilha.

@@ -1,7 +1,6 @@
-Colgate v0.19 — 245 testes simulados aprovados.
-18 acesso; 33 chegada; 41 operação; 14 sessão; 61 frontend; 44 gravação; 17 Colômbia; 13 fila; 4 medições.
-Inclui oito finalidades CO, motoristas, veículos, migração repetida, fila/cancelamento de cadastro, causas e Outro, aprovação e entrada, exportação vazia, fotos distintas, falha de upload antes de concluir saída, reenvio idempotente, isolamento de unidade e estoque de carretas.
-Bogotá, preservação de edição manual, respostas atrasadas e traduções verificadas em VM/DOM simulado.
-Regressões brasileiras passaram. Sem acesso a planilhas reais, conta Colgate ou tablet físico.
-Validação visual não realizada: Playwright disponível, executável de navegador ausente.
-Dependências externas: formulário completo de checklist de saída e conferência da configuração real CO30/CO20/CP39, endereços e catálogos.
+Colgate v0.20 — 254 testes simulados aprovados.
+23 acesso; 33 chegada; 41 operação; 14 sessão; 63 frontend; 45 gravação; 18 Colômbia; 13 fila; 4 medições.
+Administrador multipaís com uma linha por e-mail, países e unidades explícitos. Bloqueio de perfis e unidades não autorizadas.
+Troca sem renovação da sessão e sem leitura do controle; envios preservam país/planilha pela unidade autorizada.
+Conferência de contêiner durante preenchimento, exemplo ICSU4065506 e resto dez resultando em zero.
+Serviços Google/Drive e DOM simulados. Sem autenticação Colgate, implantação ou teste real no tablet.

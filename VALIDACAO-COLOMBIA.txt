@@ -15,4 +15,5 @@ PASS Migração repetida conserva veículo editado e histórico consultável por
 PASS Cadastro usa envelope da fila e cancelamento impede envio atrasado
 PASS Troca de carreta CO mantém estoque e impede levar placa já retirada
 PASS Diagnóstico informa unidade ausente sem alterar a configuração
+PASS Contêiner do documento e exceção de resto dez são validados no servidor
 Serviços Google/Drive simulados. Sem acesso à planilha real.

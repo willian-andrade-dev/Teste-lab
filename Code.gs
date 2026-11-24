@@ -42,28 +42,27 @@ function validarLogin_() {
   if (usuarios.length !== 1 || usuarios[0].Status !== 'ATIVO') falhar_('ACESSO_NEGADO');
   const u = usuarios[0];
   if (!['SEGURANCA', 'GERENTE', 'ADMINISTRADOR'].includes(u.Perfil)) falhar_('ACESSO_NEGADO');
-  const todosPaises = tabela_('Paises');
-  const paises = todosPaises.filter(p => p.Pais === u.Pais);
-  if (paises.length !== 1 || paises[0].Status !== 'ATIVO') falhar_('ACESSO_NEGADO');
-  const p = paises[0];
-  if (!p.PlanilhaID || !p.Fuso || !['pt','en','es'].includes(p.Idioma)) falhar_('CONFIGURACAO_PENDENTE');
-  if(p.PlanilhaID === String(propriedades_().getProperty('PLANILHA_CONTROLE_ID')||'').trim()) falhar_('PLANILHA_OPERACIONAL_INVALIDA');
-  if(todosPaises.some(x => x.Pais!==u.Pais && x.PlanilhaID===p.PlanilhaID)) falhar_('PLANILHA_COMPARTILHADA_ENTRE_PAISES');
-  const ids = u.Unidades.split(';').map(x => x.trim()).filter(Boolean);
-  if (!ids.length || new Set(ids).size !== ids.length) falhar_('ACESSO_NEGADO');
-  const todas = tabela_('Unidades');
-  const unidades = ids.map(id => {
-    const candidatas = todas.filter(x => x.Codigo === id);
-    if (candidatas.length !== 1 || candidatas[0].Pais !== u.Pais || candidatas[0].Status !== 'ATIVO') {
-      falhar_('ACESSO_NEGADO');
-    }
-    return candidatas[0];
+  const codigos=u.Pais.split(';').map(x=>x.trim()).filter(Boolean);
+  if(!codigos.length||new Set(codigos).size!==codigos.length||(codigos.length>1&&u.Perfil!=='ADMINISTRADOR'))falhar_('ACESSO_NEGADO');
+  const todosPaises=tabela_('Paises'),todas=tabela_('Unidades');
+  const ids=u.Unidades.split(';').map(x=>x.trim()).filter(Boolean);
+  if(!ids.length||new Set(ids).size!==ids.length)falhar_('ACESSO_NEGADO');
+  const unidades=ids.map(id=>{const matches=todas.filter(x=>x.Codigo===id);if(matches.length!==1||!codigos.includes(matches[0].Pais)||matches[0].Status!=='ATIVO')falhar_('ACESSO_NEGADO');return matches[0];});
+  const acessos=codigos.map(codigo=>{
+    const matches=todosPaises.filter(p=>p.Pais===codigo);
+    if(matches.length!==1||matches[0].Status!=='ATIVO')falhar_('ACESSO_NEGADO');
+    const p=matches[0];
+    if(!p.PlanilhaID||!p.Fuso||!['pt','en','es'].includes(p.Idioma))falhar_('CONFIGURACAO_PENDENTE');
+    if(p.PlanilhaID===String(propriedades_().getProperty('PLANILHA_CONTROLE_ID')||'').trim())falhar_('PLANILHA_OPERACIONAL_INVALIDA');
+    if(todosPaises.some(x=>x.Pais!==codigo&&x.PlanilhaID===p.PlanilhaID))falhar_('PLANILHA_COMPARTILHADA_ENTRE_PAISES');
+    const permitidas=unidades.filter(x=>x.Pais===codigo);if(!permitidas.length)falhar_('ACESSO_NEGADO');
+    return {pais:p,unidades:permitidas,origens:todas.filter(x=>x.Pais===codigo&&x.Status==='ATIVO')};
   });
-  return {email, usuario:u, pais:p, unidades, origens:todas.filter(x=>x.Pais===u.Pais && x.Status==='ATIVO')};
+  const c=Object.assign({email,usuario:u},acessos[0]);if(acessos.length>1)c.acessos=acessos;return c;
 }
 function publico_(c) {
   return {
-    email:c.email, nome:c.usuario.Nome, pais:c.pais.Pais, perfil:c.usuario.Perfil,
+    paises:(c.acessos||[{pais:c.pais}]).map(x=>({codigo:x.pais.Pais,nome:x.pais.Nome})),email:c.email, nome:c.usuario.Nome, pais:c.pais.Pais, perfil:c.usuario.Perfil,
     expiraEm:c.expiraEm, idioma:['pt','en','es'].includes(c.usuario.Idioma) ? c.usuario.Idioma : (c.pais.Pais==='CO'?'es':c.pais.Idioma),
     unidades:c.unidades.map(u => ({codigo:u.Codigo, nome:u.Nome, endereco:u.Endereco}))
   };
@@ -72,15 +71,25 @@ const SESSAO_CHAVE_='LOGISTICA_SESSAO_V04';
 const SESSAO_DURACAO_MS_=4*60*60*1000;
 function iniciarSessao_() {
   const store=PropertiesService.getUserProperties();
+  let anterior;try{anterior=JSON.parse(store.getProperty(SESSAO_CHAVE_)||'null');}catch{}
   // Um novo login invalida a sessão anterior, mesmo quando o cadastro foi bloqueado.
   store.deleteProperty(SESSAO_CHAVE_);
   const c=validarLogin_();
+  const preferido=anterior?.email===c.email?(c.acessos||[]).find(x=>x.pais.Pais===anterior.pais?.Pais):null;if(preferido)Object.assign(c,preferido);
   c.iniciadaEm=Date.now(); c.expiraEm=c.iniciadaEm+SESSAO_DURACAO_MS_;c.versaoSessao=4;
-  // ASCII permite medir o limite de bytes do Properties Service sem chamadas adicionais.
-  const json=JSON.stringify(c).replace(/[^\x00-\x7F]/g,x=>'\\u'+x.charCodeAt(0).toString(16).padStart(4,'0'));
-  if(json.length>8000) falhar_('SESSAO_MUITO_GRANDE');
-  store.setProperty(SESSAO_CHAVE_,json);
+  salvarSessao_(c);
   return c;
+}
+function salvarSessao_(c){
+  const json=JSON.stringify(c).replace(/[^\x00-\x7F]/g,x=>'\\u'+x.charCodeAt(0).toString(16).padStart(4,'0'));
+  if(json.length>8000)falhar_('SESSAO_MUITO_GRANDE');
+  PropertiesService.getUserProperties().setProperty(SESSAO_CHAVE_,json);
+}
+/** Troca somente o contexto autorizado; não renova a validade da sessão. */
+function alternarPaisBackend(codigo){
+  const c=contexto_();if(c.usuario.Perfil!=='ADMINISTRADOR')falhar_('ACESSO_NEGADO');
+  const acesso=(c.acessos||[]).find(x=>x.pais.Pais===codigo);if(!acesso)falhar_('ACESSO_NEGADO');
+  const next=Object.assign({},c,acesso);salvarSessao_(next);return publico_(next);
 }
 function contexto_() {
   // Consulta local ao armazenamento do usuário. Não abre a planilha de controle.
@@ -99,7 +108,9 @@ function obterSessaoBackend() { return publico_(iniciarSessao_()); }
 
 // Confere unidade contra a sessão de quatro horas. Não consulta bloqueios no cadastro.
 function contextoUnidade_(codigo) {
-  const c = contexto_();
+  let c = contexto_();
+  const extra=(c.acessos||[]).find(x=>x.unidades.some(u=>u.Codigo===String(codigo||'').trim()));
+  if(extra)c=Object.assign({},c,extra);
   const unidade = c.unidades.find(u => u.Codigo === String(codigo || '').trim());
   if (!unidade) falhar_('ACESSO_NEGADO');
   return {contexto:c, unidade};

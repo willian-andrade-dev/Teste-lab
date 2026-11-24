@@ -1,3 +1,41 @@
+# Colgate v0.22 — Planilha colombiana com controle consolidado
+
+## Atualizar da v0.21
+
+1. Substitua **Operacao.gs, Colombia.gs e FotosDrive.gs**. Crie o arquivo de script **ControleCO.gs** (nome ControleCO no editor).
+2. Para administrador multipaís, abra o aplicativo e selecione **Colômbia**. No editor, com conta ADMINISTRADOR autorizada nesse país, execute **prepararOperacao**.
+3. Essa preparação cria **Control_CO**, reconstrói as viagens existentes pelos eventos, aplica cores, filtros e larguras e coloca a aba no início. Não apaga registros, eventos, fotos ou cadastros.
+4. Publique uma **New version** e reabra os dispositivos. Não há novo escopo Google nem alteração do controle brasileiro.
+5. Se fotos antigas aparecerem como pendentes de migração, execute **atualizarLinksFotos**, como administrador CO, até o retorno indicar zero conversões. O comando converte até vinte fotos antigas de entrada por execução e atualiza os links do controle.
+
+## O que o gestor deve consultar
+
+**Control_CO** tem uma linha por viagem com status atual, horários de Bogotá, motorista/documento/telefone, placas, finalidade, documentos da carga, contêiner, chegada, entrada, saída, espera/permanência, checklists, registro das assinaturas, decisão gerencial e três links identificados:
+
+- Foto sello entrada: foto do lacre na entrada.
+- Foto sello salida: foto do lacre na saída.
+- Foto conductor y vehículo: foto conjunta exigida na saída colombiana.
+
+As colunas são agrupadas por cores: identificação/situação, chegada, entrada/aprovação e saída. Cabeçalho e primeiras colunas congelados, filtro e texto ajustado. As colunas internas ID e versões de checklist ficam ocultas. Não existem hashes de solicitação, bytes de imagem ou assinaturas em base64 no controle visível. As assinaturas originais permanecem preservadas nos eventos; o relatório indica seu registro.
+
+O status é reconstruído de Chegadas_v2 + Eventos_v3. Uma saída gravada resulta em **Finalizado — fuera de planta**. O sistema não inventa uma saída que não existe no histórico; se uma viagem ainda aparecer aguardando, conferir se há evento SAIDA para ela. A aba técnica Chegadas_v2 conserva o snapshot original da chegada e por isso seu status isolado não acompanha a movimentação.
+
+## Organização das abas
+
+Visíveis: **Control_CO**, **Motoristas_v3**, **Veiculos_CO_v1**, **Produtos_v2** e **Transportadoras_v2**.
+
+Ocultas, preservadas e utilizadas pelo sistema: Chegadas_v2, Eventos_v3, Fotos_v3, Fotos_Saida_v1, Fotos_Conjunto_CO_v1, Cadastros_CO_v1 e SolicitacoesCanceladas_v1. Ocultar melhora a navegação; não muda permissões nem é uma proteção de acesso.
+
+Cadastros_CO_v1 é o histórico interno dos comandos de pré-cadastro. Pode estar vazio mesmo com viagens: a chegada normal alimenta Motoristas_v3 diretamente. As três abas de fotos são armazenamento por finalidade, não relatórios duplicados. Seus links agora aparecem na mesma linha do controle, permitindo consultar tudo sem percorrer abas técnicas.
+
+Gravações comuns atualizam somente a linha da viagem, inclusive depois de ordenar o controle. Reexecutar prepararOperacao reconstrói o relatório sem duplicar viagens ou modificar fontes. Não edite manualmente valores derivados do controle esperando preservá-los: eles serão recalculados.
+
+## Validação
+
+**260 testes simulados aprovados**, incluindo reconstrução de histórico concluído, atualização incremental após ordenação, três links distintos, preservação das fontes/cadastros e visibilidade das abas. Sem acesso à planilha real, sem implantação na conta Colgate e sem teste visual real no Google Sheets nesta alteração.
+
+---
+
 # Colgate v0.21 — Chegada mais clara na Colômbia
 
 ## Atualizar da v0.20

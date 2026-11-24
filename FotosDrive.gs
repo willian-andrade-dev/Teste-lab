@@ -39,7 +39,7 @@ function atualizarLinksFotos(){return migrarFotosParaDrive();}
 function atualizarLinksFotosPais_(ss,c){
  const report=c.pais.Pais==='BR'?ss.getSheetByName('Controle_BR'):null;let ids=[];if(report&&report.getLastRow()>1){conferirCabecalho_(report,SAIDA_BR_);ids=report.getRange(2,1,report.getLastRow()-1,2).getDisplayValues();}let n=0;
  for(const [name,etapa,col]of [['Fotos_v3','ENTRADA',16],['Fotos_Saida_v1','SAIDA',36],['Fotos_Conjunto_CO_v1','CONJUNTO',0]]){const photos=ss.getSheetByName(name),count=photos?photos.getLastRow()-1:0;if(count<1)continue;const meta=photos.getRange(2,1,count,4).getDisplayValues(),urls=new Map();meta.forEach((r,i)=>{if(r[3]!==c.pais.Pais)return;const value=photos.getRange(i+2,5).getDisplayValue();if(!idFotoDrive_(value))return;vincularFotoDrive_(photos,i+2,value);urls.set(r[0],value);n++;});if(report)ids.forEach((r,i)=>{if(urls.has(r[0])){report.getRange(i+2,col).setNumberFormat('@').setValues([[urls.get(r[0])]]);linkFotoLacre_(report,i+2,r,urls.get(r[0]),etapa);}});
- }return n;
+ }if(c.pais.Pais==='CO'&&ss.getSheetByName('Control_CO'))reconstruirControleColombia_(ss);return n;
 }
 
 function folhaFoto_(etapa){

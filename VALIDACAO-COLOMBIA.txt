@@ -16,4 +16,8 @@ PASS Cadastro usa envelope da fila e cancelamento impede envio atrasado
 PASS Troca de carreta CO mantém estoque e impede levar placa já retirada
 PASS Diagnóstico informa unidade ausente sem alterar a configuração
 PASS Contêiner do documento e exceção de resto dez são validados no servidor
+PASS Controle CO acompanha chegada, entrada e saída sem mudar o snapshot original
+PASS Preparação reconstrói histórico concluído, esconde fontes e abre controle sem apagar cadastro
+PASS Uma linha reúne três links distintos e não expõe bytes de fotos ou assinaturas
+PASS Gravação atualiza só a viagem alvo mesmo depois de ordenar as linhas do controle
 Serviços Google/Drive simulados. Sem acesso à planilha real.

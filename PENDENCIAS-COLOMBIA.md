@@ -1,3 +1,11 @@
+# Organização da planilha — v0.22
+
+Control_CO passa a ser o relatório operacional consolidado, com status calculado dos eventos e links das fotos por finalidade. Fontes técnicas são preservadas e ocultadas por prepararOperacao. A conferência da planilha real continua dependendo de executar a preparação na conta autorizada e validar as viagens existentes.
+
+As pendências externas do checklist original de saída e da configuração real não foram consideradas encerradas por essa alteração.
+
+---
+
 # Colômbia — situação da versão 0.19
 
 Implementação baseada na versão 0.18 do repositório. Esta matriz distingue implementação de validação externa; testes locais não comprovam dados da planilha real.

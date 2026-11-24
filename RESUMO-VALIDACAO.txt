@@ -1,6 +1,5 @@
-Colgate v0.21 — 256 testes simulados aprovados.
-23 acesso; 33 chegada; 41 operação; 14 sessão; 65 frontend; 45 gravação; 18 Colômbia; 13 fila; 4 medições.
-Seleção por toque de produtos, busca sem perder seleção e coleta de códigos para o backend.
-Pré-cadastro fora da grade e posição estável da transportadora.
-Mantidas regressões de países, permissões, contêiner, fotos e aprovações.
-Serviços Google/Drive e DOM simulados. Sem execução na conta Colgate nem teste visual no tablet físico.
+Colgate v0.22 — 260 testes simulados aprovados.
+23 acesso; 33 chegada; 41 operação; 14 sessão; 65 frontend; 45 gravação; 22 Colômbia; 13 fila; 4 medições.
+Controle colombiano: uma linha por viagem, status atual pelos eventos, chegada/entrada/saída, links de três fotos, sem bytes de anexos no relatório.
+Reconstrução repetida sem modificar fontes, abas técnicas ocultas e controle em primeiro; atualização incremental correta após ordenar as linhas.
+Regressões brasileiras passaram. Google/Drive/Sheets e DOM simulados. Sem execução ou teste visual na planilha real.

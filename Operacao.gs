@@ -19,7 +19,7 @@ function prepararOperacao(){
   try{const c=iniciarSessao_();if(c.usuario.Perfil!=='ADMINISTRADOR')falhar_('ACESSO_NEGADO');const ss=planilhaPais_(c),schemas=schemasV3_(c.pais.Pais);
     const control=ss.getSheetByName('Controle_BR');if(c.pais.Pais==='BR'&&control&&control.getLastColumn()===33){conferirCabecalho_(control,SAIDA_ANTERIOR_BR_);garantirTamanhoControle_(control,2,36);control.getRange(1,1,1,36).setValues([SAIDA_BR_]);}
     Object.keys(schemas).forEach(n=>{const sh=ss.getSheetByName(n);if(sh&&sh.getLastRow())conferirCabecalho_(sh,schemas[n]);});
-    Object.keys(schemas).forEach(n=>{const sh=ss.getSheetByName(n)||ss.insertSheet(n);if(n==='Controle_BR')garantirTamanhoControle_(sh,2,36);if(!sh.getLastRow()){sh.getRange(1,1,1,schemas[n].length).setValues([schemas[n]]).setFontWeight('bold');sh.setFrozenRows(1);}});
+    Object.keys(schemas).forEach(n=>{const sh=ss.getSheetByName(n)||ss.insertSheet(n);if(n==='Controle_BR')garantirTamanhoControle_(sh,2,36);if(n==='Control_CO')garantirTamanhoControle_(sh,2,CONTROLE_CO_HEADERS_.length);if(!sh.getLastRow()){sh.getRange(1,1,1,schemas[n].length).setValues([schemas[n]]).setFontWeight('bold');sh.setFrozenRows(1);}});
     atualizarVisoes_(ss,c);
     if(c.pais.Pais==='BR'){
       ss.getSheetByName('Controle_BR').showSheet();
@@ -27,7 +27,7 @@ function prepararOperacao(){
       ['Chegadas_BR','Entradas_BR','Saidas_BR'].forEach(n=>{const antiga=ss.getSheetByName(n);if(antiga)antiga.hideSheet();});
       ['Chegadas_v2','Eventos_v3','Fotos_v3','Fotos_Saida_v1','SolicitacoesCanceladas_v1'].forEach(n=>ss.getSheetByName(n).hideSheet());
     }
-    formatarAbasApoio_(ss,c.pais.Pais);
+    formatarAbasApoio_(ss,c.pais.Pais);if(c.pais.Pais==='CO')organizarAbasColombia_(ss);
     console.log('Pasta privada de fotos '+c.pais.Pais+': '+pastaFotosPais_(c.pais.Pais).getUrl());
     SpreadsheetApp.flush();console.log('Versão 0.15 preparada para '+c.pais.Pais+'. Registros existentes preservados.');
     return 'Preparação concluída';
@@ -189,6 +189,7 @@ function linkFotoLacre_(sh,linha,row,urlDireta,etapa='ENTRADA'){const coluna=eta
 }
 /** A gravação atualiza somente uma linha do relatório consolidado. */
 function atualizarViagemVisoes_(ss,c,row,eventos,foto){
+  if(c.pais.Pais==='CO'){atualizarControleColombia_(ss,row,eventos);return;}
   if(c.pais.Pais!=='BR')return;
   const temFoto=typeof foto==='boolean'?foto:temFotoLacre_(ss,row[0]);
   const relacionados=eventos.filter(e=>e[3]===row[0]&&e[4]===row[4]&&e[5]===row[3]);
@@ -204,6 +205,7 @@ function atualizarViagemVisoes_(ss,c,row,eventos,foto){
 }
 /** Reconstrução administrativa usa as fontes, sem depender dos três relatórios antigos. */
 function atualizarVisoes_(ss,c){
+  if(c.pais.Pais==='CO'){reconstruirControleColombia_(ss);return;}
   if(c.pais.Pais!=='BR')return;
   const sh=ss.getSheetByName('Controle_BR');conferirCabecalho_(sh,SAIDA_BR_);
   const eventos=indiceEventos_(eventosV3_(ss)),shFoto=ss.getSheetByName('Fotos_v3');conferirCabecalho_(shFoto,FOTO_HEADERS_);

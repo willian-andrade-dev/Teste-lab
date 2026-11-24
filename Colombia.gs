@@ -8,7 +8,7 @@ const CO_CADASTRO_HEADERS_=['Solicitacao','Hash','Autor','Unidade','Entidade','C
 const CO_VEICULO_HEADERS_=['Pais','Placa','Tipo','Observacao','AtualizadoUTC'];
 function schemasColombia_(){
   return {
-    Cadastros_CO_v1:CO_CADASTRO_HEADERS_,Veiculos_CO_v1:CO_VEICULO_HEADERS_,Fotos_Conjunto_CO_v1:FOTO_HEADERS_
+    Control_CO:CONTROLE_CO_HEADERS_,Cadastros_CO_v1:CO_CADASTRO_HEADERS_,Veiculos_CO_v1:CO_VEICULO_HEADERS_,Fotos_Conjunto_CO_v1:FOTO_HEADERS_
   };
 }
 function contextoColombia_(unidade){
@@ -19,6 +19,7 @@ function contextoColombia_(unidade){
 function prepararColombia_(ss){
   Object.entries(schemasColombia_()).forEach(([name,headers])=>{
     const sh=ss.getSheetByName(name)||ss.insertSheet(name);
+    garantirTamanhoControle_(sh,2,headers.length);
     if(!sh.getLastRow())sh.getRange(1,1,1,headers.length).setValues([headers]).setFontWeight('bold');
     else conferirCabecalho_(sh,headers);
     sh.setFrozenRows(1);

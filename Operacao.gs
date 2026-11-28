@@ -64,6 +64,7 @@ function obterPainelOperacaoBackend(codigo){
   const all=rows.map(x=>Object.assign(viagemPublica_(x,indice[x[0]]||[]),{temFotoLacre:fotos.has(x[0]),transferenciaRecebida:x[1].indexOf('transf-')===0})).reverse();
   return {recentes:all.slice(0,50),entrada:all.filter(x=>!['DENTRO_UNIDADE','CONCLUIDO','RECUSADO'].includes(x.status)),
     saida:all.filter(x=>x.status==='DENTRO_UNIDADE'),concluidos:all.filter(x=>['CONCLUIDO','RECUSADO'].includes(x.status)).slice(0,30),
+    patio:carretasPatio_(rows,eventos,r.contexto.pais.Pais,r.unidade.Codigo),servidorUTC:new Date().toISOString(),
     podeAutorizar:['GERENTE','ADMINISTRADOR'].includes(r.contexto.usuario.Perfil)};
 }
 /** Uma única chamada inicial devolve configuração e todas as listas da unidade. */
@@ -106,14 +107,16 @@ function registrarMovimentoCore_(d,med){
       dados={justificativa:textoChegada_(d.justificativa,'justificativa',2000,true)};
     }else if(acao==='SAIDA'){
       const checklist=validarChecklist_(d.checklist,CHECK_SAIDA_);
-      const carregado=textoChegada_(d.carregado,'carregado',3,true);if(!['SIM','NAO'].includes(carregado))falhar_('CAMPO_INVALIDO:carregado');
+      const carregado=textoChegada_(d.carregado,'carregado',3,true);if(!['SIM','NAO','NA'].includes(carregado))falhar_('CAMPO_INVALIDO:carregado');
+      // Sem carreta é não aplicável, nunca uma declaração implícita de veículo vazio.
+      if(carregado==='NA'&&(d.trocarCarretas==='SIM'&&Array.isArray(d.placasCarretasSaida)?d.placasCarretasSaida:row.slice(18,20).filter(Boolean)).length)falhar_('CAMPO_INVALIDO:carregado');
       if(carregado==='SIM'&&['carga','lacres'].some(k=>checklist[k].estado==='NA'))falhar_('CHECKLIST_INVALIDO');
       // Nesta etapa divergência na saída bloqueia conclusão; não há liberação tácita.
       if(temNaoConforme_(checklist))falhar_('SAIDA_DIVERGENTE');
       const devolucao=s.entrada&&s.entrada.calco==='EMPRESTADO'?textoChegada_(d.devolucaoCalco,'devolucaoCalco',3,true):'NA';
       if(!['SIM','NAO','NA'].includes(devolucao)||(s.entrada&&s.entrada.calco==='EMPRESTADO'&&devolucao!=='SIM'))falhar_('CALCO_NAO_DEVOLVIDO');
       dados={checklist,carregado,destino:(carregado==='SIM'||c.pais.Pais==='CO')?textoChegada_(d.destino,'destino',160,true):'',faturas:listaChegada_(d.faturas||[],'faturas',carregado==='SIM'),lacres:listaChegada_(d.lacres||[],'lacres',carregado==='SIM'),devolucaoCalco:devolucao,observacao:textoChegada_(d.observacao,'observacao',2000,false)};
-      if(c.pais.Pais==='BR'&&carregado==='NAO'&&dados.lacres.length&&!dados.faturas.length)falhar_('CAMPO_OBRIGATORIO:faturas');
+      if(c.pais.Pais==='BR'&&carregado!=='SIM'&&dados.lacres.length&&!dados.faturas.length)falhar_('CAMPO_OBRIGATORIO:faturas');
     }else falhar_('ACAO_INVALIDA');
     if(acao==='SAIDA'&&c.pais.Pais==='CO'&&(!anterior||dadosAnteriores.versaoChecklistSaida))dados.versaoChecklistSaida='CO-SAIDA-CONFIRMADO-1';
     if(acao==='SAIDA'&&c.pais.Pais==='BR'&&d.destinoCodigo){const destino=validarDestinoBR_(c,r.unidade,d,anterior);dados.destino=destino.nome;dados.destinoCodigo=destino.codigo;}
@@ -126,7 +129,7 @@ function registrarMovimentoCore_(d,med){
     if(foto)dados.fotoLacreHash=hashV3_(foto);
 
     const hash=hashV3_({acao,dados});const repetido=eventos.find(e=>e[1]===key);
-    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');med.marcar('validacao_leitura');med.gravacaoIniciada=true;if(fotoConjunto)salvarFotoLacre_(ss,row,fotoConjunto,key,true,'CONJUNTO');if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:true};}
+    if(repetido){if(repetido[3]!==id||repetido[4]!==r.unidade.Codigo||repetido[5]!==c.pais.Pais||repetido[8]!==c.email||repetido[2]!==hash)falhar_('SOLICITACAO_CONFLITANTE');med.marcar('validacao_leitura');med.gravacaoIniciada=true;if(fotoConjunto)salvarFotoLacre_(ss,row,fotoConjunto,key,true,'CONJUNTO');if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),patio:carretasPatio_(todas,eventos,c.pais.Pais,r.unidade.Codigo),servidorUTC:new Date().toISOString(),repetida:true};}
     if(!Number.isInteger(d.revisao)||d.revisao!==s.revisao)falhar_('REGISTRO_ATUALIZADO');
     if(['ENTRADA','RETER'].includes(acao)&&!['AGUARDANDO_ENTRADA','PENDENTE_AVALIACAO','AGUARDANDO_AUTORIZACAO','LIBERADO'].includes(s.status))falhar_('TRANSICAO_INVALIDA');
     if(acao==='RETER'&&!dados.divergencia)falhar_('CAMPO_OBRIGATORIO:divergencia');
@@ -147,7 +150,7 @@ function registrarMovimentoCore_(d,med){
     med.marcar('validacao_leitura');med.gravacaoIniciada=true;
     if(c.pais.Pais==='CO'){if(fotoConjunto)salvarFotoLacre_(ss,row,fotoConjunto,key,true,'CONJUNTO');if(foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');}
     const sh=ss.getSheetByName('Eventos_v3');sh.getRange(sh.getLastRow()+1,1,1,event.length).setNumberFormat('@').setValues([event.map(celulaTexto_)]);
-    eventos.push(event);if(c.pais.Pais!=='CO'&&fotoConjunto)salvarFotoLacre_(ss,row,fotoConjunto,key,true,'CONJUNTO');if(c.pais.Pais!=='CO'&&foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');med.marcar('gravacao');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),repetida:false};
+    eventos.push(event);if(c.pais.Pais!=='CO'&&fotoConjunto)salvarFotoLacre_(ss,row,fotoConjunto,key,true,'CONJUNTO');if(c.pais.Pais!=='CO'&&foto)salvarFotoLacre_(ss,row,foto,key,true,acao==='SAIDA'?'SAIDA':'ENTRADA');med.marcar('gravacao');atualizarViagemVisoes_(ss,c,row,eventos);if(acao==='SAIDA')encaminharTransferencia_(ss,c,row,repetido||eventos[eventos.length-1],eventos);med.marcar('relatorios');SpreadsheetApp.flush();med.marcar('confirmacao');return {viagem:viagemPublica_(row,eventos),patio:carretasPatio_(todas,eventos,c.pais.Pais,r.unidade.Codigo),servidorUTC:new Date().toISOString(),repetida:false};
   }finally{lock.releaseLock();}
 }
 function validarFotoLacre_(v){const s=textoChegada_(v,'fotoLacre',40000,false);if(s&&!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s))falhar_('FOTO_INVALIDA');if(s&&s.indexOf('data:image/jpeg;base64,/9j/')!==0)falhar_('FOTO_INVALIDA');return s;}

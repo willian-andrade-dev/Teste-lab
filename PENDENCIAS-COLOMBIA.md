@@ -1,3 +1,22 @@
+# Atualização v0.23 — carretas e tablet nos dois países
+
+| Pedido | Situação | Evidência / limite |
+|---|---|---|
+| Placas antigas e Mercosul no Brasil | Concluído | Validação cliente/servidor normaliza ambos. Colômbia mantém seu formato próprio. |
+| Sem carreta não pergunta carregado/descarregado | Concluído | Usa NA explícito, rejeitado se houver carreta de saída; destino e foto conjunta CO preservados. |
+| Cronômetros de espera e permanência | Concluído | Instantes persistidos + relógio do servidor; atualização local sem RPC por cronômetro. Não mede etapas não registradas de carga/descarga. |
+| + único ao lado de nota/lacre | Concluído | Também em remitos CO, rótulos acessíveis em três idiomas e remoção individual. Testes DOM simulados. |
+| HUD com placa/tempo e ↻ | Concluído | Derivado do estoque físico, unidade atual; confirmação de entrada/saída atualiza HUD. |
+| Gestor adiciona carreta manualmente | Concluído | GERENTE/ADMINISTRADOR autorizado, placa e motivo, autor real e hora no evento; idempotência e lock; não cria chegada. Tempo começa na inclusão. |
+| Segunda carreta de saída sob demanda | Concluído | Apenas após primeira + toque em +; limpar primeira limpa segunda; duplicidade sinalizada no campo. |
+| Visual tablet retrato/paisagem | Implementado; validação externa | CSS responsivo e DOM simulado; tentativa Playwright bloqueada por ausência do binário Chromium, sem renderização real. |
+
+**Atualizar:** Chegada.gs, Operacao.gs, Patio.gs e Index.html; salvar e publicar New version. Nenhuma migração ou execução administrativa nova em BR/CO já preparado. Inclusão manual pelo aplicativo com GERENTE/ADMINISTRADOR. 279 testes locais simulados aprovados. Consulte o roteiro da v0.23 no README.
+
+O formulário original completo de saída, a configuração/planilha real e a homologação física continuam dependências externas, conforme a matriz anterior abaixo.
+
+---
+
 # Organização da planilha — v0.22
 
 Control_CO passa a ser o relatório operacional consolidado, com status calculado dos eventos e links das fotos por finalidade. Fontes técnicas são preservadas e ocultadas por prepararOperacao. A conferência da planilha real continua dependendo de executar a preparação na conta autorizada e validar as viagens existentes.

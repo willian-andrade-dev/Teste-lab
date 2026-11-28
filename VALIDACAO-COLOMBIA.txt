@@ -20,4 +20,7 @@ PASS Controle CO acompanha chegada, entrada e saída sem mudar o snapshot origin
 PASS Preparação reconstrói histórico concluído, esconde fontes e abre controle sem apagar cadastro
 PASS Uma linha reúne três links distintos e não expõe bytes de fotos ou assinaturas
 PASS Gravação atualiza só a viagem alvo mesmo depois de ordenar as linhas do controle
+PASS Carreta manual colombiana integra HUD e troca de saída sem alterar fonte histórica
+PASS Colômbia permite saída sem carreta como NA, preservando destino e foto conjunta obrigatórios
+PASS Sem carreta na saída mantém a antiga no estoque, mas NA com a original é bloqueado
 Serviços Google/Drive simulados. Sem acesso à planilha real.

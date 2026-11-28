@@ -1,3 +1,34 @@
+# Ajuste v0.23 — placas, carretas e controles para tablet
+
+Atualização para **Brasil e Colômbia**, baseada no main de 1701585. Substitua **Chegada.gs, Operacao.gs, Patio.gs e Index.html**, salve e publique em **Deploy → Manage deployments → Edit → Version → New version → Deploy**. Reabra o link `/exec`. **Não é necessário executar função de preparação/migração de planilhas nesta atualização** se a operação já estava preparada. Não há novos cabeçalhos, abas ou escopos. As funções de preparação citadas nas versões anteriores abaixo continuam destinadas àquelas instalações/migrações.
+
+- Brasil aceita os modelos `ABC-1234`/`ABC1234` e `ABC1D23`, com normalização, na chegada e na inclusão manual. Colômbia mantém a validação própria de placas; não recebe a expressão brasileira.
+- A saída usa as carretas efetivamente escolhidas. Sem carreta, a pergunta carregado/descarregado fica oculta e o evento guarda **NA**, sem declarar veículo vazio. Com carreta, exige escolha Sim/Não. O servidor rejeita NA com carreta. Reenvios antigos com Sim/Não continuam compatíveis.
+- Notas, lacres e remitos usam **um único + ao lado do primeiro campo**; os itens seguintes têm × com espaço e alvo de toque de 44px. A segunda carreta de troca só aparece após selecionar a primeira e tocar em +; limpar a primeira remove a segunda. Duplicidade de placas é sinalizada no formulário.
+- HUD nas três etapas: somente **placa e tempo na planta**, restrito à unidade atual. Em telas largas fica lateral; em retrato fica acima do formulário, com altura limitada e rolagem própria. ↻ atualiza o estoque da saída aberta ou o painel, sem botão adicional no formulário.
+- **GERENTE ou ADMINISTRADOR**, autorizado na unidade de qualquer dos dois países, pode usar **+ no HUD** para incluir carreta fisicamente presente, com placa válida e motivo obrigatório. Segurança não consegue nem por chamada direta ao servidor. O horário é o da inclusão: não foi inventado um horário antigo de entrada. Carreta já presente no país e placa de veículo trator dentro da planta são rejeitadas.
+- Inclusão excepcional é auditada em **Eventos_v3**, ação `PATIO_ADICIONAR`, com autor real, país/unidade, motivo e horário do servidor. Não cria chegada de motorista nem viagem no relatório. O lock das movimentações também protege inclusões; reenvio da mesma solicitação não duplica evento, e outro pedido para placa já dentro é rejeitado. A saída remove apenas as carretas levadas; deixar a original e pegar outra preserva o estoque físico. Para reinscrever depois de uma saída, use uma nova inclusão física.
+- Espera é **chegada → entrada**; permanência é **entrada → saída**. As filas exibem o tempo correndo, derivado dos instantes salvos e do relógio recebido do servidor, atualizado localmente a cada 30s sem nova consulta para o cronômetro. O HUD mede entrada física da carreta → agora. Esses tempos não identificam início/fim efetivo de carga/descarga.
+- Na Colômbia, destino e foto motorista + caminhão continuam obrigatórios mesmo sem carreta; lacre sem fatura continua possível e exige sua foto. No Brasil, sem carreta ou descarregado, as notas e lacres opcionais são abertos pelo +; foto continua obrigatória quando há lacre. Não foram alterados checklists, aprovações, configurações de acesso ou arquivos do Drive.
+
+## Validação da v0.23
+
+**279 testes simulados aprovados**: 25 acesso, 33 chegada, 47 operação, 14 sessão, 73 frontend, 45 gravação, 25 Colômbia, 13 fila e 4 medições. Execute `for f in testes/*.cjs; do node "$f" || exit 1; done` na raiz. Cobrem placas antiga/nova, escopo país/unidade, acesso direto por segurança, motivo obrigatório, inclusão/reenvio, troca/retirada/reinclusão, NA apenas sem carreta, preservação do histórico, relógio do servidor e + por toque em DOM simulado. Não são testes de concorrência com clientes reais.
+
+Tentativa de validação visual com Playwright não pôde abrir o Chromium: `/usr/bin/chromium` existe como launcher, mas `/usr/lib/chromium/chromium` está ausente. Não houve renderização real, teste em tablet físico, nem acesso ao Apps Script, às planilhas ou ao Drive reais. Estilos e comportamento foram verificados nos testes locais; o aspecto visual precisa da conferência abaixo.
+
+## Roteiro operacional curto — repetir em BR e CO
+
+1. Como SEGURANCA, registre chegada com placa válida do país. No BR teste `ABC-1234`, `ABC1D23` e erro `AB12345`; CO continua aceitando seu modelo `ABC123`. Use dados de teste autorizados e não reutilize documento/placa com visita ativa.
+2. Antes da entrada, a carreta não deve estar no HUD. Confira os documentos, checklist e assinaturas; após confirmação real da entrada, veja a placa com tempo correndo. A fila de saída mostra permanência desde a entrada.
+3. Como GERENTE/ADMINISTRADOR, na mesma unidade, + do HUD → placa de outra carreta fisicamente presente + motivo → confirmar. Confira a linha auditada em Eventos_v3 caso necessário. Reenvio não duplica; tentar incluir de novo deve avisar que já está dentro. SEGURANCA não deve ter esse +.
+4. Abra saída → trocar carretas → selecione a primeira no estoque. A segunda só abre por +. Uma placa repetida deve bloquear o formulário. Teste também sem carreta: não aparece carregado/descarregado. Na CO continue preenchendo destino/foto conjunta.
+5. Com carreta, marque carregado e confira as estrelas de nota/lacre, + ao lado de cada campo, foto do lacre obrigatória e falta de dados bloqueando antes do envio. Sem carreta no BR, confira o + opcional de documentos.
+6. Após confirmação da saída, a carreta levada sai do HUD; a deixada permanece com seu horário original. Troque de unidade/país e confira que o estoque não vaza. Registros antigos, aprovações e arquivos devem permanecer.
+7. Em tablet retrato e paisagem, teste toque no +/×/↻, rolagem do HUD, legibilidade e modos claro/escuro. Compare tempos e estoque com o movimento físico. Homologue antes de ampliar o uso.
+
+---
+
 # Ajuste v0.22.1 — diagnóstico de login multipaís
 
 Substitua **Code.gs e Index.html**, salve e publique uma **New version** no Deploy. Não execute preparação de planilhas para corrigir autorização.

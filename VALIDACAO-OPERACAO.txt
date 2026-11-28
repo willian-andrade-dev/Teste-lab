@@ -39,6 +39,12 @@ PASS CPF não encontrado não recebe dados de outro motorista e cabeçalho diver
 PASS Coleta não solicita nem persiste notas enviadas indevidamente
 PASS Cadastro e consulta de outro país não revelam CPF brasileiro
 PASS Colômbia tem as seis abas auxiliares formatadas com valores preservados
+PASS Brasil aceita placas antigas, novas e pontuação; Colômbia mantém seu formato próprio
+PASS Gestor inclui carreta fisicamente presente com autor e horário do servidor, sem viagem fictícia
+PASS Reenvio manual é idempotente e inclusão concorrente não duplica estoque entre unidades
+PASS Segurança não inclui carreta por chamada direta com perfil falsificado
+PASS Saída sem carreta registra NA; levar carreta do HUD exige pergunta de carga e retira estoque
+PASS Motivo, placa e tipo físico são validados antes da inclusão manual
 
-41 testes locais com serviços simulados.
+47 testes locais com serviços simulados.
 Sem gravação em planilhas reais.

@@ -64,7 +64,14 @@ PASS Conferência do contêiner mostra seis para o exemplo e bloqueia dígito di
 PASS Produtos colombianos permitem seleção por toque, busca e coleta sem Ctrl
 PASS Pré-cadastro fica fora dos campos e empresa mantém posição ao mudar finalidade
 PASS Erro de login mostra correção da configuração antes da mensagem genérica de acesso
+PASS Placas brasileiras antigas e Mercosul são normalizadas; a regra colombiana continua separada
+PASS Sem carreta a pergunta de carga fica oculta em ambos os países, sem declarar veículo vazio
+PASS Segunda carreta de saída depende de primeira selecionada e de toque no mais
+PASS Um único botão mais fica ao lado da primeira nota e lacre, com rótulo acessível traduzido
+PASS HUD mostra só placa e tempo, permanece nas três telas e restringe inclusão ao gestor
+PASS Cronômetros usam relógio do servidor, avançam localmente e não consultam planilhas
+PASS Cadastro manual usa identidade do pedido em reenvio, sem sucesso otimista no HUD
 
-66 testes de lógica do frontend em VM/DOM simulado.
+73 testes de lógica do frontend em VM/DOM simulado.
 Trinta trocas de aba após carga inicial sem RPC.
 Não é uma medição de latência nem um teste visual no navegador real.

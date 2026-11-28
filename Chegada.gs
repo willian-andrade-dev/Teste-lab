@@ -88,7 +88,7 @@ function documentoChegada_(v,pais) {
 function placaChegada_(v,pais,required) {
   const s=textoChegada_(v,'placa',12,required).replace(/[\s-]/g,'').toUpperCase();
   if(!s)return '';
-  const pattern=pais==='BR'?/^[A-Z]{3}\d[A-Z]\d{2}$/:/^[A-Z0-9]{5,10}$/;
+  const pattern=pais==='BR'?/^[A-Z]{3}(?:\d{4}|\d[A-Z]\d{2})$/:/^[A-Z0-9]{5,10}$/;
   if(!pattern.test(s))falhar_('PLACA_INVALIDA');return s;
 }
 function containerChegada_(v) {
@@ -141,7 +141,7 @@ function rowsChegadas_(ss) {
 }
 function resumoChegada_(row) {
   const timestamp=new Date(row[6]),localBR=['BR','CO'].includes(row[3])&&!isNaN(timestamp.getTime()),fusoResumo=row[3]==='CO'?'America/Bogota':'America/Sao_Paulo';
-  return {id:row[0],solicitacao:row[1],unidade:row[4],status:row[5],data:localBR?Utilities.formatDate(timestamp,fusoResumo,'yyyy-MM-dd'):row[7],hora:localBR?Utilities.formatDate(timestamp,fusoResumo,'HH:mm:ss'):row[8],oficial:row[11],finalidade:row[12],documento:row[13],motorista:row[14],empresa:row[16],placa1:row[17],placa2:row[18],observacao:row[34]};
+  return {id:row[0],solicitacao:row[1],unidade:row[4],status:row[5],chegadaUTC:row[6],data:localBR?Utilities.formatDate(timestamp,fusoResumo,'yyyy-MM-dd'):row[7],hora:localBR?Utilities.formatDate(timestamp,fusoResumo,'HH:mm:ss'):row[8],oficial:row[11],finalidade:row[12],documento:row[13],motorista:row[14],empresa:row[16],placa1:row[17],placa2:row[18],observacao:row[34]};
 }
 function registrarChegadaBackend(dados){return medirOperacao_('CHEGADA',dados,registrarChegadaCore_);}
 function registrarChegadaCore_(dados,med) {

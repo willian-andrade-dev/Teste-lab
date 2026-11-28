@@ -1,5 +1,12 @@
-Colgate v0.22.1 — 263 testes simulados aprovados.
-25 acesso; 33 chegada; 41 operação; 14 sessão; 66 frontend; 45 gravação; 22 Colômbia; 13 fila; 4 medições.
-Diagnóstico de login: país sem unidade, perfil sem acesso multipaís, código inválido, nova tentativa após correção.
-Nenhuma flexibilização de autorização; identidade, país/unidade, status e perfil continuam obrigatórios.
-Google/Drive/Sheets e DOM simulados; sem acesso à configuração real do usuário ou autenticação Colgate.
+Colgate v0.23 — 279 testes simulados aprovados.
+25 acesso; 33 chegada; 47 operação; 14 sessão; 73 frontend; 45 gravação; 25 Colômbia; 13 fila; 4 medições.
+BR: placas ABC-1234 e ABC1D23 aceitas; CO preserva regra de placa própria.
+Sem carreta: NA explícito; com carreta NA bloqueado. CO preserva destino/foto conjunta.
+HUD: estoque por unidade, gestor inclui com motivo/autor/hora, reenvio não duplica, saída tira só as carretas levadas.
+Cronômetros locais com instante persistido e relógio do servidor, sem RPC adicional por atualização do tempo.
++ único junto ao primeiro campo; segunda carreta somente sob demanda; testes em DOM simulado.
+Históricos, autorizações, fila persistente e permissões anteriores preservados pelos testes de regressão.
+Google/Drive/Sheets e DOM simulados; sem acesso ao Apps Script/planilha/Drive reais ou tablet físico.
+Tentativa Playwright falhou antes de abrir: launcher /usr/bin/chromium presente, binário /usr/lib/chromium/chromium ausente.
+Não houve renderização/validação visual no navegador real ou teste de carga/concorrência real.
+Sem novos cabeçalhos, abas, escopos ou migrações nesta atualização.
